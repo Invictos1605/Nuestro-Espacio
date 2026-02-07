@@ -118,4 +118,409 @@
                         <div class="h-10 w-px bg-slate-200"></div>
                         <div class="flex flex-col">
                             <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Guanare, Ven</span>
-                            <span id="clock-guanare" class
+                            <span id="clock-guanare" class="text-3xl font-black text-slate-900 tracking-tighter">--:-- --</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <h2 class="text-6xl md:text-8xl font-serif-bold italic tracking-tighter text-slate-900 leading-tight">Evelyn y Juan</h2>
+                        <div class="inline-flex items-center gap-2 bg-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] text-rose-500 shadow-sm border border-slate-100">
+                            TIEMPO DE SER INVICTOS
+                        </div>
+                        <div id="countdown" class="flex gap-4 md:gap-10 justify-center items-center">
+                            <div class="flex flex-col"><span id="days" class="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter">00</span><span class="text-[10px] font-black text-slate-400 uppercase mt-2 tracking-widest">Días</span></div>
+                            <div class="flex flex-col"><span id="hours" class="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter">00</span><span class="text-[10px] font-black text-slate-400 uppercase mt-2 tracking-widest">Horas</span></div>
+                            <div class="flex flex-col"><span id="minutes" class="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter">00</span><span class="text-[10px] font-black text-slate-400 uppercase mt-2 tracking-widest">Mins</span></div>
+                            <div class="flex flex-col"><span id="seconds" class="text-5xl md:text-7xl font-black text-rose-500 opacity-30 tracking-tighter">00</span><span class="text-[10px] font-black text-slate-400 uppercase mt-2 tracking-widest">Segs</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN DINÁMICA -->
+            <section id="tab-dynamic" class="tab-content p-6 lg:p-20 h-screen overflow-y-auto">
+                <div class="max-w-5xl mx-auto">
+                    <header class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 animate-fade">
+                        <div class="space-y-2">
+                            <h2 id="page-title" class="text-6xl font-black tracking-tighter uppercase italic text-slate-900 leading-none">Título</h2>
+                            <p id="page-subtitle" class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em]">Subtítulo</p>
+                        </div>
+                        <button onclick="openModal()" class="flex items-center gap-4 bg-slate-900 text-white px-10 py-5 rounded-[2.5rem] font-black text-[11px] uppercase tracking-widest hover:bg-black transition-all shadow-xl">
+                            <i data-lucide="plus" size="18"></i> <span id="btn-text">Agregar</span>
+                        </button>
+                    </header>
+                    <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-32 text-center">
+                        <p id="empty-state" class="col-span-full py-20 text-slate-300 font-bold uppercase tracking-widest text-xs">Cargando nuestros recuerdos...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL -->
+    <div id="item-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/10 backdrop-blur-md flex items-center justify-center p-6">
+        <div class="bg-white rounded-[3.5rem] w-full max-w-xl p-10 shadow-2xl space-y-8 animate-fade overflow-y-auto max-h-[90vh] border border-slate-100">
+            <div class="flex justify-between items-center">
+                <h3 id="modal-title" class="text-2xl font-black tracking-tighter uppercase italic">Nuevo Recuerdo</h3>
+                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"><i data-lucide="x" size="20"></i></button>
+            </div>
+            <form id="save-form" class="space-y-6">
+                <!-- ID oculto para edición -->
+                <input type="hidden" id="edit-id">
+
+                <input id="in-title" required placeholder="Título" class="w-full bg-slate-50 p-6 rounded-3xl border border-slate-100 outline-none font-bold">
+                
+                <div id="music-fields" class="hidden">
+                    <input id="in-url" placeholder="Enlace de la carpeta de YouTube" class="w-full bg-slate-50 p-6 rounded-3xl border border-slate-100 outline-none font-bold">
+                </div>
+
+                <div id="diary-fields" class="hidden space-y-4">
+                    <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                        <button type="button" id="record-btn" class="w-16 h-16 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                            <i data-lucide="mic" id="mic-icon"></i>
+                        </button>
+                        <div class="flex-1">
+                            <span id="record-status" class="text-[10px] font-black uppercase tracking-widest text-slate-400">¿Grabar nota de voz?</span>
+                            <div id="audio-preview-container" class="hidden mt-2">
+                                <audio id="audio-preview" controls class="h-8 w-full"></audio>
+                                <button type="button" onclick="resetAudio()" class="text-[9px] font-black text-rose-500 uppercase tracking-widest mt-2">Borrar grabación</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="photo-upload">
+                    <label class="flex flex-col items-center justify-center gap-3 w-full bg-slate-50 p-10 rounded-[2.5rem] border-2 border-dashed border-slate-200 cursor-pointer hover:border-slate-400 transition-all">
+                        <i data-lucide="camera" class="text-slate-300" size="32"></i>
+                        <span id="file-status" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Subir Foto (Opcional si editas)</span>
+                        <input id="in-file" type="file" accept="image/*" class="hidden">
+                    </label>
+                </div>
+
+                <textarea id="in-desc" placeholder="Escribe algo aquí..." class="w-full bg-slate-50 p-6 rounded-3xl border border-slate-100 outline-none font-bold h-32 resize-none"></textarea>
+                
+                <button id="save-btn" type="submit" class="w-full bg-slate-900 text-white py-6 rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all">Guardar para siempre</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // CONFIGURACIÓN DE FIREBASE
+        const firebaseConfig = JSON.parse('{"apiKey": "AIzaSyDjZL-biMikywR0Z64UjLMYL0voGHOhbfQ", "authDomain": "nuestro-espacio-1605.firebaseapp.com", "projectId": "nuestro-espacio-1605", "storageBucket": "nuestro-espacio-1605.firebasestorage.app", "messagingSenderId": "838302204888", "appId": "1:838302204888:web:d983170110c78383bcf28ad"}');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = "invictos-web-v3";
+
+        let activeTab = 'home';
+        let allItems = [];
+        let base64Img = "";
+        let audioBlobBase64 = "";
+        let mediaRecorder;
+        let audioChunks = [];
+        let userAuth = null;
+
+        // 1. SESIÓN
+        const initSession = async () => {
+            try { await signInAnonymously(auth); } catch (err) { console.error(err); }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userAuth = user;
+                startDataSync();
+            }
+        });
+
+        // 2. SINCRONIZACIÓN
+        function startDataSync() {
+            const q = collection(db, 'artifacts', appId, 'public', 'data', 'memories');
+            onSnapshot(q, (snap) => {
+                allItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderGrid();
+                const empty = document.getElementById('empty-state');
+                if (empty) empty.style.display = allItems.length ? 'none' : 'block';
+            });
+        }
+
+        // LOGIN
+        document.getElementById('login-form').onsubmit = (e) => {
+            e.preventDefault();
+            const pass = document.getElementById('password-input').value.toLowerCase().trim();
+            if(['invictos', '1605', 'evelyn', 'juan'].includes(pass)) {
+                localStorage.setItem('invictos_auth', 'true');
+                enterApp();
+            } else {
+                document.getElementById('error-message').classList.remove('hidden');
+            }
+        };
+
+        function enterApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            initAppUI();
+        }
+
+        if(localStorage.getItem('invictos_auth') === 'true') enterApp();
+
+        function initAppUI() {
+            initSession();
+            initTimer();
+            initClocks();
+            lucide.createIcons();
+            setInterval(createHeart, 2000);
+        }
+
+        function createHeart() {
+            const container = document.getElementById('hearts-container');
+            const heart = document.createElement('div');
+            heart.className = 'heart-particle';
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.fontSize = (Math.random() * 10 + 10) + 'px';
+            heart.style.animationDuration = (Math.random() * 3 + 3) + 's';
+            container.appendChild(heart);
+            setTimeout(() => heart.remove(), 6000);
+        }
+
+        // NAVEGACIÓN
+        window.changeTab = (tab) => {
+            activeTab = tab;
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if(tab === 'home') {
+                document.getElementById('tab-home').classList.add('active');
+            } else {
+                document.getElementById('tab-dynamic').classList.add('active');
+                updateHeaders();
+            }
+            updateNav();
+            renderGrid();
+        };
+
+        function updateHeaders() {
+            const h = { 
+                gallery: { t: 'Galería', s: 'Nuestros momentos visuales', b: 'Subir Foto' },
+                music: { t: 'Música', s: 'Nuestras melodías eternas', b: 'Añadir Lista' },
+                diary: { t: 'Diario', s: 'Palabras y voces de amor', b: 'Nuevo Recuerdo' }
+            };
+            document.getElementById('page-title').innerText = h[activeTab].t;
+            document.getElementById('page-subtitle').innerText = h[activeTab].s;
+            document.getElementById('btn-text').innerText = h[activeTab].b;
+        }
+
+        function updateNav() {
+            document.querySelectorAll('.nav-link, .nav-link-m').forEach(link => {
+                const active = link.dataset.tab === activeTab;
+                if(link.classList.contains('nav-link')) {
+                    link.className = `nav-link w-full flex items-center gap-4 p-5 rounded-2xl font-bold transition-all text-sm ${active ? 'sidebar-active shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`;
+                } else {
+                    link.className = `nav-link-m p-4 rounded-2xl transition-all ${active ? 'bg-slate-900 text-white shadow-lg scale-110' : 'text-slate-400'}`;
+                }
+            });
+        }
+
+        function renderGrid() {
+            if(activeTab === 'home') return;
+            const grid = document.getElementById('items-grid');
+            grid.innerHTML = '';
+            
+            const filtered = allItems
+                .filter(m => m.type === activeTab)
+                .sort((a,b) => new Date(b.created) - new Date(a.created));
+
+            filtered.forEach(m => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-[3rem] border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl transition-all animate-fade flex flex-col group relative";
+                
+                let mediaHtml = '';
+                if(activeTab === 'music') {
+                    mediaHtml = `
+                        <div class="p-8 bg-slate-900 flex flex-col items-center justify-center text-center space-y-4">
+                            <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-white"><i data-lucide="music-2"></i></div>
+                            <h4 class="text-white font-black tracking-tighter uppercase text-lg">${m.title}</h4>
+                            <a href="${m.url}" target="_blank" class="bg-rose-500 text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-rose-600">Abrir Enlace</a>
+                        </div>
+                    `;
+                } else {
+                    if(m.image) mediaHtml += `<div class="aspect-square overflow-hidden bg-slate-50"><img src="${m.image}" class="w-full h-full object-cover"></div>`;
+                    if(m.audio) mediaHtml += `<div class="p-6 bg-slate-50 border-b border-slate-100"><audio controls src="${m.audio}" class="w-full h-10"></audio></div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="absolute top-6 right-6 flex gap-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="editItem('${m.id}')" class="w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900"><i data-lucide="edit-3" size="14"></i></button>
+                        <button onclick="deleteItem('${m.id}')" class="w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500"><i data-lucide="trash-2" size="14"></i></button>
+                    </div>
+                    ${mediaHtml}
+                    <div class="p-8 flex-1">
+                        <div class="mb-4">
+                            <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest">${new Date(m.created).toLocaleDateString('es-ES')}</span>
+                        </div>
+                        <h4 class="text-xl font-black uppercase italic tracking-tighter mb-3 text-slate-900">${m.title}</h4>
+                        <p class="text-slate-500 text-sm leading-relaxed">${m.content}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // GUARDAR O ACTUALIZAR
+        document.getElementById('save-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('save-btn');
+            const editId = document.getElementById('edit-id').value;
+            btn.disabled = true; 
+            btn.innerText = "Sincronizando...";
+
+            try {
+                const data = {
+                    type: activeTab,
+                    title: document.getElementById('in-title').value,
+                    url: document.getElementById('in-url')?.value || "",
+                    content: document.getElementById('in-desc').value,
+                    created: new Date().toISOString()
+                };
+                
+                // Si subió nueva foto/audio, los actualizamos. Si no, se mantienen los anteriores (si es edición)
+                if(base64Img) data.image = base64Img;
+                if(audioBlobBase64) data.audio = audioBlobBase64;
+
+                if(editId) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', editId), data);
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data);
+                }
+                closeModal();
+            } catch (err) {
+                alert("Error al guardar.");
+            } finally {
+                btn.disabled = false; 
+                btn.innerText = "Guardar para siempre";
+            }
+        };
+
+        // ACCIÓN DE EDITAR
+        window.editItem = (id) => {
+            const item = allItems.find(i => i.id === id);
+            if(!item) return;
+
+            openModal();
+            document.getElementById('modal-title').innerText = "Editar Recuerdo";
+            document.getElementById('edit-id').value = id;
+            document.getElementById('in-title').value = item.title;
+            document.getElementById('in-desc').value = item.content;
+            if(document.getElementById('in-url')) document.getElementById('in-url').value = item.url || "";
+            
+            if(item.audio) {
+                document.getElementById('audio-preview').src = item.audio;
+                document.getElementById('audio-preview-container').classList.remove('hidden');
+                document.getElementById('record-status').innerText = "Audio actual cargado ✓";
+            }
+
+            if(item.image) {
+                document.getElementById('file-status').innerText = "Imagen actual cargada ✓";
+            }
+        };
+
+        window.deleteItem = async (id) => {
+            if(confirm('¿Eliminar para siempre?')) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
+            }
+        };
+
+        // UI MODAL
+        window.openModal = () => {
+            document.getElementById('item-modal').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = "Nuevo Recuerdo";
+            document.getElementById('edit-id').value = "";
+            document.getElementById('music-fields').classList.toggle('hidden', activeTab !== 'music');
+            document.getElementById('diary-fields').classList.toggle('hidden', activeTab !== 'diary');
+            document.getElementById('photo-upload').classList.toggle('hidden', activeTab === 'music');
+        };
+
+        window.closeModal = () => {
+            document.getElementById('item-modal').classList.add('hidden');
+            document.getElementById('save-form').reset();
+            base64Img = ""; audioBlobBase64 = "";
+            document.getElementById('audio-preview-container').classList.add('hidden');
+            document.getElementById('record-status').innerText = "¿Grabar nota de voz?";
+            document.getElementById('file-status').innerText = "Subir Foto";
+        };
+
+        window.resetAudio = () => {
+            audioBlobBase64 = "";
+            document.getElementById('audio-preview-container').classList.add('hidden');
+            document.getElementById('record-status').innerText = "¿Grabar nota de voz?";
+        };
+
+        // AUDIO & FOTOS
+        const recordBtn = document.getElementById('record-btn');
+        recordBtn.onclick = async () => {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            audioBlobBase64 = reader.result;
+                            document.getElementById('audio-preview').src = audioBlobBase64;
+                            document.getElementById('audio-preview-container').classList.remove('hidden');
+                            document.getElementById('record-status').innerText = "Audio capturado ✓";
+                        };
+                        reader.readAsDataURL(blob);
+                    };
+                    mediaRecorder.start();
+                    recordBtn.classList.add('recording-pulse');
+                } catch (err) { alert("Micrófono no accesible"); }
+            } else {
+                mediaRecorder.stop();
+                recordBtn.classList.remove('recording-pulse');
+            }
+        };
+
+        document.getElementById('in-file').onchange = (e) => {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    base64Img = ev.target.result;
+                    document.getElementById('file-status').innerText = "Nueva foto lista ✓";
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        function initClocks() {
+            const update = () => {
+                const now = new Date();
+                const opt = { hour: '2-digit', minute: '2-digit', hour12: true };
+                document.getElementById('clock-lima').innerText = now.toLocaleTimeString('en-US', { ...opt, timeZone: 'America/Lima' });
+                document.getElementById('clock-guanare').innerText = now.toLocaleTimeString('en-US', { ...opt, timeZone: 'America/Caracas' });
+            };
+            setInterval(update, 1000); update();
+        }
+
+        function initTimer() {
+            const start = new Date('2025-05-16T00:00:00');
+            const update = () => {
+                const diff = Math.floor((new Date() - start) / 1000);
+                document.getElementById('days').innerText = Math.floor(diff / 86400).toString().padStart(2, '0');
+                document.getElementById('hours').innerText = Math.floor((diff % 86400) / 3600).toString().padStart(2, '0');
+                document.getElementById('minutes').innerText = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+                document.getElementById('seconds').innerText = Math.floor(diff % 60).toString().padStart(2, '0');
+            };
+            setInterval(update, 1000); update();
+        }
+
+    </script>
+</body>
+</html>
