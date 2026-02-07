@@ -43,7 +43,6 @@
             text-shadow: 0 4px 10px rgba(225, 29, 72, 0.2);
         }
 
-        /* Estilo para el input de archivo personalizado */
         .file-input-label {
             display: flex;
             align-items: center;
@@ -60,6 +59,14 @@
             color: #64748b;
         }
         .file-input-label:hover { border-color: #fca5a5; background: #fff1f2; }
+
+        /* Estilos para el visor de fotos (Lightbox) */
+        #viewer-modal {
+            transition: opacity 0.3s ease;
+        }
+        .viewer-content {
+            max-height: 85vh;
+        }
     </style>
 </head>
 <body class="bg-[#fff8f8] text-slate-800 min-h-screen">
@@ -130,19 +137,6 @@
                 </div>
             </div>
 
-            <!-- Frase Especial -->
-            <div class="mb-10 bg-white border border-rose-100 p-8 md:p-12 rounded-[2.5rem] relative shadow-sm">
-                <div class="relative z-10 text-center">
-                    <p class="text-lg md:text-xl font-bold text-slate-700 leading-snug uppercase tracking-tight">
-                        "Cada kilómetro, cada noche sin ti, cada pantalla que nos separa, han sido solo pruebas. 
-                        Pruebas de que nuestro amor no solo vence la barrera de la distancia sino también la del tiempo, 
-                        cada vez somos más fuertes y más seguros, más...
-                        <span class="invictos-text">Invictos.</span>
-                    </p>
-                    <p class="mt-6 text-[9px] font-black text-red-400 uppercase tracking-[0.3em]">— Evelyn 14.02.2026</p>
-                </div>
-            </div>
-
             <header class="flex justify-between items-end mb-10">
                 <div>
                     <h2 id="section-title" class="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter uppercase">FOTOS</h2>
@@ -165,14 +159,12 @@
                 <input id="in-title" required placeholder="TÍTULO" class="w-full bg-slate-50 p-4 rounded-xl outline-none border-2 border-transparent focus:border-rose-100 transition-all font-bold text-sm">
                 <input id="in-date" type="date" required class="w-full bg-slate-50 p-4 rounded-xl outline-none border-2 border-transparent focus:border-rose-100 transition-all font-bold text-sm">
                 
-                <!-- Área de Foto -->
                 <div id="photo-upload-area" class="hidden">
                     <label class="file-input-label">
                         <i data-lucide="upload-cloud" size="20"></i>
                         <span id="file-name">Seleccionar foto</span>
                         <input id="in-file" type="file" accept="image/*" class="hidden">
                     </label>
-                    <p class="text-[10px] text-slate-400 mt-2 text-center uppercase font-bold">Máximo 1MB recomendado</p>
                 </div>
 
                 <textarea id="in-content" required placeholder="TU MENSAJE..." class="w-full bg-slate-50 p-4 rounded-xl h-24 resize-none outline-none border-2 border-transparent focus:border-rose-100 transition-all font-bold text-sm"></textarea>
@@ -185,11 +177,41 @@
         </div>
     </div>
 
+    <!-- VISOR DE FOTOS AMPLIADO -->
+    <div id="viewer-modal" class="hidden fixed inset-0 z-[80] bg-white/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-8 overflow-y-auto">
+        <button onclick="closeViewer()" class="fixed top-6 right-6 z-[90] bg-slate-100 p-3 rounded-full hover:bg-red-100 hover:text-red-600 transition-all">
+            <i data-lucide="x" size="24"></i>
+        </button>
+        
+        <div class="w-full max-w-5xl flex flex-col md:flex-row gap-8 items-center md:items-start animate-fade">
+            <!-- Imagen -->
+            <div class="w-full md:w-3/5 bg-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                <img id="view-img" src="" class="w-full h-auto object-contain viewer-content">
+            </div>
+            
+            <!-- Texto -->
+            <div class="w-full md:w-2/5 space-y-6 text-left p-2">
+                <div>
+                    <span id="view-date" class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]"></span>
+                    <h2 id="view-title" class="text-3xl md:text-4xl font-black text-slate-900 uppercase tracking-tighter mt-2 leading-none"></h2>
+                </div>
+                <div class="h-1 w-12 bg-rose-100 rounded-full"></div>
+                <p id="view-content" class="text-slate-600 text-sm md:text-base font-bold leading-relaxed italic"></p>
+                
+                <div class="pt-8 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center text-red-500">
+                        <i data-lucide="heart" fill="currentColor" size="18"></i>
+                    </div>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Recuerdo de Evelyn & Juan</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Configuración Firebase (Reemplaza con la tuya si es necesario)
         const firebaseConfig = {
             apiKey: "AIzaSyDjZL-biMikywR0Z64UjLMYL0voGHOhbfQ",
             authDomain: "nuestro-espacio-1605.firebaseapp.com",
@@ -207,19 +229,7 @@
         let memories = [];
         let base64Image = "";
 
-        // Manejo de Archivo
-        document.getElementById('in-file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('file-name').innerText = file.name;
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    base64Image = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
+        // Login Logic
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const pass = document.getElementById('password-input').value.toLowerCase().trim();
@@ -234,7 +244,6 @@
         });
 
         function initExtras() {
-            // Lluvia de corazones
             setInterval(() => {
                 const heart = document.createElement('div');
                 heart.className = 'heart-particle';
@@ -246,7 +255,6 @@
                 setTimeout(() => heart.remove(), 9000);
             }, 1000);
 
-            // Contador
             const startDate = new Date('2025-05-16T00:00:00');
             function updateTimer() {
                 const now = new Date();
@@ -265,6 +273,17 @@
             updateTimer();
         }
 
+        // File handling
+        document.getElementById('in-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('file-name').innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = (event) => base64Image = event.target.result;
+                reader.readAsDataURL(file);
+            }
+        });
+
         window.setTab = (tab) => { currentTab = tab; render(); };
         window.openAddModal = () => {
             document.getElementById('add-modal').classList.remove('hidden');
@@ -275,6 +294,26 @@
             document.getElementById('add-form').reset(); 
             document.getElementById('file-name').innerText = "Seleccionar foto";
             base64Image = "";
+        };
+
+        // Lightbox Logic
+        window.openViewer = (id) => {
+            const m = memories.find(item => item.id === id);
+            if(!m) return;
+            
+            document.getElementById('view-img').src = m.url || '';
+            document.getElementById('view-title').innerText = m.title;
+            document.getElementById('view-date').innerText = new Date(m.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('view-content').innerText = m.content;
+            
+            document.getElementById('viewer-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        };
+
+        window.closeViewer = () => {
+            document.getElementById('viewer-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
         };
 
         function initApp() {
@@ -311,7 +350,8 @@
             }
         });
 
-        window.deleteItem = async (id) => {
+        window.deleteItem = async (e, id) => {
+            e.stopPropagation(); // Evitar que se abra el visor al borrar
             if(confirm('¿Borrar recuerdo?')) {
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
             }
@@ -324,7 +364,7 @@
             const titles = { photo: 'FOTOS', letter: 'CARTAS', moment: 'DIARIO' };
             titleEl.innerText = titles[currentTab];
 
-            // Update Nav Styles
+            // Tabs Styling
             ['photo', 'letter', 'moment'].forEach(tab => {
                 const b1 = document.getElementById(`btn-${tab}`);
                 const b2 = document.getElementById(`m-btn-${tab}`);
@@ -335,30 +375,42 @@
 
             const filtered = memories.filter(m => m.type === currentTab);
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-xs animate-fade">Vacío por ahora...</div>`;
+                container.innerHTML = `<div class="col-span-full py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-xs animate-fade">No hay nada aquí aún...</div>`;
             }
 
             filtered.forEach(m => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-[2rem] shadow-sm overflow-hidden border border-rose-50 relative group h-72 flex flex-col animate-fade";
+                card.className = "bg-white rounded-[2rem] shadow-sm overflow-hidden border border-rose-50 relative group h-80 flex flex-col animate-fade cursor-pointer";
                 
                 if (m.type === 'photo') {
+                    card.onclick = () => openViewer(m.id);
                     card.innerHTML = `
-                        <img src="${m.url}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                        <div class="absolute bottom-5 left-5 right-5 text-white">
-                            <p class="text-[9px] font-black opacity-60 mb-1 uppercase tracking-widest">${new Date(m.date).toLocaleDateString()}</p>
-                            <p class="font-black text-base leading-tight uppercase tracking-tighter">${m.title}</p>
+                        <img src="${m.url}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="absolute bottom-6 left-6 right-6 text-white translate-y-2 group-hover:translate-y-0 transition-transform">
+                            <p class="text-[8px] font-black opacity-60 mb-1 uppercase tracking-widest">${new Date(m.date).toLocaleDateString()}</p>
+                            <p class="font-black text-lg leading-tight uppercase tracking-tighter">${m.title}</p>
                         </div>`;
                 } else {
                     card.innerHTML = `
-                        <div class="p-6 h-full flex flex-col">
-                            <span class="text-[8px] font-black text-red-500 uppercase tracking-[0.2em] mb-3">${new Date(m.date).toLocaleDateString()}</span>
-                            <h3 class="font-black text-lg mb-2 text-slate-900 leading-tight uppercase tracking-tighter">${m.title}</h3>
-                            <p class="text-slate-500 text-xs font-bold line-clamp-5 leading-relaxed flex-1">${m.content}</p>
+                        <div class="p-8 h-full flex flex-col">
+                            <span class="text-[8px] font-black text-red-500 uppercase tracking-[0.3em] mb-4">${new Date(m.date).toLocaleDateString()}</span>
+                            <h3 class="font-black text-xl mb-3 text-slate-900 leading-tight uppercase tracking-tighter">${m.title}</h3>
+                            <p class="text-slate-500 text-xs font-bold line-clamp-6 leading-relaxed flex-1">${m.content}</p>
+                            <div class="mt-4 flex items-center gap-2 text-red-400">
+                                <i data-lucide="arrow-right" size="14"></i>
+                                <span class="text-[8px] font-black uppercase tracking-widest">Leer más</span>
+                            </div>
                         </div>`;
                 }
-                card.innerHTML += `<button onclick="deleteItem('${m.id}')" class="absolute top-4 right-4 p-2 bg-white/90 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white shadow-sm"><i data-lucide="trash-2" size="14"></i></button>`;
+                
+                // Botón de borrar
+                const delBtn = document.createElement('button');
+                delBtn.onclick = (e) => deleteItem(e, m.id);
+                delBtn.className = "absolute top-4 right-4 p-2 bg-white/90 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white shadow-md z-20";
+                delBtn.innerHTML = `<i data-lucide="trash-2" size="14"></i>`;
+                card.appendChild(delBtn);
+                
                 container.appendChild(card);
             });
             lucide.createIcons();
