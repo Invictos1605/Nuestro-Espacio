@@ -4,48 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E & J | Nuestro Espacio</title>
-    <!-- Cargamos Tailwind para el diseño y Lucide para los iconos -->
+    <!-- Cargamos Tailwind para el diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Cargamos Lucide para los iconos -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fuentes Románticas -->
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-romance { font-family: 'Dancing Script', cursive; }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade { animation: fadeIn 0.5s ease-out forwards; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body class="bg-rose-50 text-slate-800 min-h-screen">
 
-    <!-- PANTALLA DE LOGIN -->
+    <!-- PANTALLA DE CARGA / LOGIN -->
     <div id="login-screen" class="fixed inset-0 z-[100] bg-rose-50 flex items-center justify-center p-4">
         <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center border border-rose-100 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-400 to-rose-600"></div>
-            <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-rose-600"></div>
+            <div class="w-20 h-20 bg-rose-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                 <i data-lucide="heart" fill="currentColor" size="40" class="animate-pulse"></i>
             </div>
             <h1 class="text-3xl font-bold text-slate-800 mb-2 font-romance text-4xl">Evelyn y Juan</h1>
             <p class="text-slate-400 mb-8 italic">Introduce nuestra clave mágica</p>
             <form id="login-form" class="space-y-4">
                 <input type="password" id="password-input" placeholder="¿Nuestra fecha o palabra?" 
-                    class="w-full bg-slate-50 p-5 rounded-2xl border-2 border-transparent focus:border-rose-200 outline-none transition-all text-center text-lg">
-                <p id="error-msg" class="text-rose-500 text-sm font-bold hidden">Palabra incorrecta, mi amor.</p>
-                <button type="submit" class="w-full bg-rose-500 text-white font-bold py-5 rounded-2xl hover:bg-rose-600 shadow-xl shadow-rose-100 transition-all active:scale-95">
+                    class="w-full bg-slate-50 p-5 rounded-2xl border-2 border-transparent focus:border-red-200 outline-none transition-all text-center text-lg">
+                <p id="error-msg" class="text-red-500 text-sm font-bold hidden">Esa no es la clave, mi amor. ❤️</p>
+                <button type="submit" class="w-full bg-red-600 text-white font-bold py-5 rounded-2xl hover:bg-red-700 shadow-xl shadow-red-100 transition-all active:scale-95">
                     Entrar a nuestro mundo
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- APP PRINCIPAL (Oculta por defecto) -->
+    <!-- APP PRINCIPAL -->
     <div id="main-app" class="hidden">
-        <!-- Sidebar (Escritorio) -->
+        <!-- Navegación Lateral -->
         <aside class="hidden md:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-white border-r border-rose-100 p-8 z-40">
-            <div class="flex items-center gap-3 mb-12 text-rose-500">
+            <div class="flex items-center gap-3 mb-12 text-red-600">
                 <i data-lucide="heart" fill="currentColor"></i>
                 <span class="font-bold text-xl font-romance text-2xl">E & J</span>
             </div>
@@ -57,177 +59,150 @@
                     <i data-lucide="file-text"></i> <span>Cartas</span>
                 </button>
                 <button onclick="setTab('moment')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all" id="btn-moment">
-                    <i data-lucide="calendar"></i> <span>Diario</span>
+                    <i data-lucide="calendar"></i> <span>Nuestro Diario</span>
                 </button>
             </nav>
         </aside>
 
-        <!-- Navegación Inferior (Móvil) -->
-        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 flex justify-around p-4 z-50 rounded-t-3xl shadow-2xl">
-            <button onclick="setTab('photo')" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-300" id="m-btn-photo">
-                <i data-lucide="image"></i> <span class="text-[10px] font-bold">FOTOS</span>
+        <!-- Navegación Móvil -->
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-rose-100 flex justify-around p-4 z-50 rounded-t-3xl shadow-2xl">
+            <button onclick="setTab('photo')" class="flex flex-col items-center gap-1 text-slate-400" id="m-btn-photo">
+                <i data-lucide="image"></i><span class="text-[10px] font-bold">FOTOS</span>
             </button>
-            <button onclick="setTab('letter')" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-300" id="m-btn-letter">
-                <i data-lucide="file-text"></i> <span class="text-[10px] font-bold">CARTAS</span>
+            <button onclick="setTab('letter')" class="flex flex-col items-center gap-1 text-slate-400" id="m-btn-letter">
+                <i data-lucide="file-text"></i><span class="text-[10px] font-bold">CARTAS</span>
             </button>
-            <button onclick="setTab('moment')" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-300" id="m-btn-moment">
-                <i data-lucide="calendar"></i> <span class="text-[10px] font-bold">DIARIO</span>
+            <button onclick="setTab('moment')" class="flex flex-col items-center gap-1 text-slate-400" id="m-btn-moment">
+                <i data-lucide="calendar"></i><span class="text-[10px] font-bold">DIARIO</span>
             </button>
         </nav>
 
-        <!-- Contenido Principal -->
         <main class="p-6 md:p-12 md:pl-72 max-w-6xl mx-auto pb-24">
             <header class="flex justify-between items-center mb-12">
                 <div>
                     <h2 id="section-title" class="text-4xl font-black text-slate-800 tracking-tight">Cargando...</h2>
-                    <p class="text-rose-400 font-medium italic mt-1 font-romance text-xl">Para Evelyn, de Juan.</p>
+                    <p class="text-red-400 font-medium italic mt-1 font-romance text-xl">Para mi persona favorita.</p>
                 </div>
-                <button onclick="openAddModal()" class="bg-rose-500 text-white p-5 rounded-2xl shadow-xl shadow-rose-200 hover:bg-rose-600 transition-all hover:scale-110 active:scale-95">
+                <button onclick="openAddModal()" class="bg-red-600 text-white p-5 rounded-2xl shadow-xl shadow-red-200 hover:bg-red-700 transition-all">
                     <i data-lucide="plus" stroke-width="3"></i>
                 </button>
             </header>
 
-            <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Los recuerdos aparecerán aquí -->
-            </div>
+            <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
         </main>
     </div>
 
-    <!-- MODAL PARA AÑADIR -->
+    <!-- MODAL -->
     <div id="add-modal" class="hidden fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-[2.5rem] max-w-md w-full p-10 shadow-2xl relative">
-            <h3 class="text-2xl font-bold mb-6 text-slate-800">Nuevo Recuerdo</h3>
+            <h3 class="text-2xl font-bold mb-6 text-slate-800 font-romance text-3xl">Nuevo Recuerdo</h3>
             <form id="add-form" class="space-y-4">
-                <input id="in-title" required placeholder="Título" class="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-rose-200">
+                <input id="in-title" required placeholder="Título" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
                 <input id="in-date" type="date" required class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
-                <input id="in-url" placeholder="URL de la imagen (solo para fotos)" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
-                <textarea id="in-content" required placeholder="Escribe aquí..." class="w-full bg-slate-50 p-4 rounded-2xl h-32 resize-none outline-none"></textarea>
+                <input id="in-url" placeholder="URL de la foto" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
+                <textarea id="in-content" required placeholder="Tu mensaje..." class="w-full bg-slate-50 p-4 rounded-2xl h-32 resize-none outline-none"></textarea>
                 <div class="flex gap-4">
                     <button type="button" onclick="closeAddModal()" class="flex-1 py-4 text-slate-400 font-bold">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-rose-500 text-white font-bold py-4 rounded-2xl shadow-lg">Guardar</button>
+                    <button type="submit" class="flex-1 bg-red-600 text-white font-bold py-4 rounded-2xl">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
-        let currentTab = 'photo';
-        let memories = JSON.parse(localStorage.getItem('nuestros_recuerdos_v1')) || [
-            { id: 1, type: 'photo', title: 'Nuestro Inicio', date: '2024-05-16', url: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800', content: 'El primer día de nuestra aventura.' }
-        ];
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Login Logic
+        // CONFIGURACIÓN EXTRAÍDA DE TU IMAGEN
+        const firebaseConfig = {
+            apiKey: "AIzaSyDjZL-biMikywR0Z64UjLMYL0voGHOhbfQ",
+            authDomain: "nuestro-espacio-1605.firebaseapp.com",
+            projectId: "nuestro-espacio-1605",
+            storageBucket: "nuestro-espacio-1605.firebasestorage.app",
+            messagingSenderId: "838302204888",
+            appId: "1:838302204888:web:d983170110c78383bcf28ad"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const appId = "invictos-web";
+
+        let currentTab = 'photo';
+        let memories = [];
+
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const pass = document.getElementById('password-input').value.toLowerCase().trim();
             if (['invictos', '16052025'].includes(pass)) {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                render();
+                initApp();
             } else {
                 document.getElementById('error-msg').classList.remove('hidden');
             }
         });
 
-        function setTab(tab) {
-            currentTab = tab;
-            render();
-        }
-
-        function openAddModal() {
+        window.setTab = (tab) => { currentTab = tab; render(); };
+        window.openAddModal = () => {
             document.getElementById('add-modal').classList.remove('hidden');
-            document.getElementById('in-url').style.display = currentTab === 'photo' ? 'block' : 'none';
+            document.getElementById('in-url').classList.toggle('hidden', currentTab !== 'photo');
             document.getElementById('in-date').valueAsDate = new Date();
+        };
+        window.closeAddModal = () => { document.getElementById('add-modal').classList.add('hidden'); document.getElementById('add-form').reset(); };
+
+        function initApp() {
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'memories'));
+            onSnapshot(q, (snapshot) => {
+                memories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                memories.sort((a, b) => new Date(b.date) - new Date(a.date));
+                render();
+            }, (error) => {
+                console.error("Error de permisos. Revisa las REGLAS de Firestore:", error);
+            });
         }
 
-        function closeAddModal() {
-            document.getElementById('add-modal').classList.add('hidden');
-            document.getElementById('add-form').reset();
-        }
-
-        document.getElementById('add-form').addEventListener('submit', (e) => {
+        document.getElementById('add-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const newMem = {
-                id: Date.now(),
                 type: currentTab,
                 title: document.getElementById('in-title').value,
                 date: document.getElementById('in-date').value,
-                url: document.getElementById('in-url').value,
+                url: document.getElementById('in-url').value || '',
                 content: document.getElementById('in-content').value
             };
-            memories.unshift(newMem);
-            localStorage.setItem('nuestros_recuerdos_v1', JSON.stringify(memories));
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), newMem);
             closeAddModal();
-            render();
         });
 
-        function deleteItem(id) {
-            if(confirm('¿Borrar este recuerdo?')) {
-                memories = memories.filter(m => m.id !== id);
-                localStorage.setItem('nuestros_recuerdos_v1', JSON.stringify(memories));
-                render();
-            }
-        }
+        window.deleteItem = async (id) => {
+            if(confirm('¿Borrar?')) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
+        };
 
         function render() {
             const container = document.getElementById('grid-container');
             const titleEl = document.getElementById('section-title');
             container.innerHTML = '';
-
             const titles = { photo: 'Nuestras Fotos', letter: 'Cartas del Corazón', moment: 'Nuestro Diario' };
             titleEl.innerText = titles[currentTab];
 
-            // Update buttons state
-            document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(b => {
-                const isActive = b.id.includes(currentTab);
-                if(b.classList.contains('nav-btn')) {
-                    b.className = `nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${isActive ? 'bg-rose-500 text-white shadow-xl font-bold' : 'text-slate-400 hover:bg-rose-50'}`;
-                } else {
-                    b.className = `mobile-nav-btn flex flex-col items-center gap-1 ${isActive ? 'text-rose-500 scale-110' : 'text-slate-300'}`;
-                }
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                const active = btn.id.includes(currentTab);
+                btn.className = `nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${active ? 'bg-red-600 text-white' : 'text-slate-400'}`;
             });
 
             const filtered = memories.filter(m => m.type === currentTab);
-            
-            if(filtered.length === 0) {
-                container.innerHTML = `<p class="col-span-full text-center py-20 text-slate-400 italic">No hay nada aquí todavía...</p>`;
-            }
-
             filtered.forEach(m => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-[2rem] shadow-sm hover:shadow-xl transition-all overflow-hidden border border-rose-50 relative animate-fade group h-80";
-                
-                let inner = '';
-                if(m.type === 'photo') {
-                    inner = `
-                        <img src="${m.url}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                        <div class="absolute bottom-6 left-6 text-white">
-                            <p class="font-bold text-lg">${m.title}</p>
-                            <p class="text-[10px] opacity-70 uppercase tracking-widest">${m.date}</p>
-                        </div>
-                    `;
-                } else {
-                    inner = `
-                        <div class="p-8 h-full flex flex-col">
-                            <h3 class="font-bold text-xl mb-2 ${m.type === 'letter' ? 'font-romance text-2xl text-rose-800' : ''}">${m.title}</h3>
-                            <p class="text-slate-500 text-sm italic line-clamp-5">"${m.content}"</p>
-                            <p class="mt-auto text-[10px] font-bold text-rose-300 uppercase">${m.date}</p>
-                        </div>
-                    `;
-                }
-
-                card.innerHTML = inner + `
-                    <button onclick="deleteItem(${m.id})" class="absolute top-4 right-4 p-2 bg-white/90 text-rose-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all shadow-md">
-                        <i data-lucide="trash-2" size="16"></i>
-                    </button>
-                `;
+                card.className = "bg-white rounded-[2rem] shadow-sm overflow-hidden border border-rose-50 relative group h-80 flex flex-col animate-fade";
+                card.innerHTML = (m.type === 'photo' ? 
+                    `<img src="${m.url}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div><div class="absolute bottom-6 left-6 text-white"><p class="font-bold">${m.title}</p></div>` :
+                    `<div class="p-8 h-full flex flex-col"><h3 class="font-bold text-xl mb-2">${m.title}</h3><p class="text-slate-500 text-sm italic line-clamp-6">${m.content}</p></div>`) +
+                    `<button onclick="deleteItem('${m.id}')" class="absolute top-4 right-4 p-2 bg-white/90 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" size="16"></i></button>`;
                 container.appendChild(card);
             });
             lucide.createIcons();
         }
-
-        window.onload = () => lucide.createIcons();
+        lucide.createIcons();
     </script>
 </body>
 </html>
