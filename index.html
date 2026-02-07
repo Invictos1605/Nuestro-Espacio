@@ -31,18 +31,6 @@
             100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
 
-        .invictos-text {
-            display: block;
-            font-size: 2.5rem;
-            line-height: 1.2;
-            margin-top: 0.75rem;
-            color: #e11d48;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            text-shadow: 0 4px 10px rgba(225, 29, 72, 0.2);
-        }
-
         .file-input-label {
             display: flex;
             align-items: center;
@@ -60,12 +48,14 @@
         }
         .file-input-label:hover { border-color: #fca5a5; background: #fff1f2; }
 
-        /* Estilos para el visor de fotos (Lightbox) */
         #viewer-modal {
             transition: opacity 0.3s ease;
         }
-        .viewer-content {
-            max-height: 85vh;
+        .viewer-img-container {
+            max-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -91,7 +81,7 @@
         </div>
     </div>
 
-    <!-- APP PRINCIPAL -->
+    <!-- APLICACIÓN PRINCIPAL -->
     <div id="main-app" class="hidden relative z-10">
         <!-- Sidebar Escritorio -->
         <aside class="hidden md:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-white border-r border-rose-100 p-8 z-40">
@@ -125,15 +115,25 @@
             </button>
         </nav>
 
-        <main class="p-6 md:p-12 md:pl-72 max-w-6xl mx-auto pb-24">
-            <!-- Contador -->
-            <div class="mb-8 bg-white/60 backdrop-blur-md border border-rose-100 p-5 rounded-[2rem] text-center shadow-sm">
-                <p class="text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] mb-2">Nuestro tiempo</p>
-                <div id="timer" class="flex justify-center gap-6 text-slate-800">
-                    <div class="flex flex-col"><span id="days" class="text-2xl font-black tracking-tighter">00</span><span class="text-[9px] font-bold opacity-40 uppercase">Días</span></div>
-                    <div class="flex flex-col"><span id="hours" class="text-2xl font-black tracking-tighter">00</span><span class="text-[9px] font-bold opacity-40 uppercase">Horas</span></div>
-                    <div class="flex flex-col"><span id="minutes" class="text-2xl font-black tracking-tighter">00</span><span class="text-[9px] font-bold opacity-40 uppercase">Mins</span></div>
-                    <div class="flex flex-col"><span id="seconds" class="text-2xl font-black text-red-500 tracking-tighter">00</span><span class="text-[9px] font-bold opacity-40 uppercase">Segs</span></div>
+        <main class="p-6 md:p-12 md:pl-72 max-w-4xl mx-auto pb-24">
+            <!-- DASHBOARD: Contador y Frase Especial -->
+            <div class="mb-12 bg-white/80 backdrop-blur-md border border-rose-100 p-8 rounded-[3rem] text-center shadow-sm animate-fade">
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Nuestro tiempo juntos</p>
+                <div id="timer" class="flex justify-center gap-4 md:gap-8 text-slate-800 mb-8 scale-90 md:scale-100">
+                    <div class="flex flex-col bg-rose-50/50 p-3 rounded-2xl min-w-[70px]"><span id="days" class="text-3xl font-black tracking-tighter">00</span><span class="text-[9px] font-bold opacity-40 uppercase">Días</span></div>
+                    <div class="flex flex-col bg-rose-50/50 p-3 rounded-2xl min-w-[70px]"><span id="hours" class="text-3xl font-black tracking-tighter">00</span><span class="text-[9px] font-bold opacity-40 uppercase">Horas</span></div>
+                    <div class="flex flex-col bg-rose-50/50 p-3 rounded-2xl min-w-[70px]"><span id="minutes" class="text-3xl font-black tracking-tighter">00</span><span class="text-[9px] font-bold opacity-40 uppercase">Mins</span></div>
+                    <div class="flex flex-col bg-rose-50/50 p-3 rounded-2xl min-w-[70px]"><span id="seconds" class="text-3xl font-black text-red-500 tracking-tighter">00</span><span class="text-[9px] font-bold opacity-40 uppercase">Segs</span></div>
+                </div>
+                
+                <div class="max-w-xl mx-auto space-y-4">
+                    <div class="h-px w-12 bg-rose-200 mx-auto"></div>
+                    <p class="text-slate-600 font-bold italic text-base leading-relaxed">
+                        "Cada Kilometro, cada noche sin ti, cada pantalla que nos separa, han sido solo pruebas. Pruebas que demuestra que nuestro amor no solo supera la distancia tambien supera el tiempo, esto nos ha hecho mas fuertes, mas seguro, mas.. <span class="text-red-600 font-black uppercase not-italic">INVICTOS</span>."
+                    </p>
+                    <div class="pt-2">
+                        <p class="text-rose-400 font-black text-[10px] uppercase tracking-widest">EVELYN 14-02-2026</p>
+                    </div>
                 </div>
             </div>
 
@@ -147,11 +147,11 @@
                 </button>
             </header>
 
-            <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 gap-6"></div>
         </main>
     </div>
 
-    <!-- MODAL PARA AÑADIR -->
+    <!-- MODAL AÑADIR -->
     <div id="add-modal" class="hidden fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-[2rem] max-w-sm w-full p-8 shadow-2xl relative animate-fade">
             <h3 class="text-xl font-black mb-6 text-slate-900 uppercase tracking-tighter">Nuevo Recuerdo</h3>
@@ -177,19 +177,17 @@
         </div>
     </div>
 
-    <!-- VISOR DE FOTOS AMPLIADO -->
+    <!-- VISOR DE IMÁGENES (LIGHTBOX) -->
     <div id="viewer-modal" class="hidden fixed inset-0 z-[80] bg-white/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-8 overflow-y-auto">
         <button onclick="closeViewer()" class="fixed top-6 right-6 z-[90] bg-slate-100 p-3 rounded-full hover:bg-red-100 hover:text-red-600 transition-all">
             <i data-lucide="x" size="24"></i>
         </button>
         
         <div class="w-full max-w-5xl flex flex-col md:flex-row gap-8 items-center md:items-start animate-fade">
-            <!-- Imagen -->
-            <div class="w-full md:w-3/5 bg-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl">
-                <img id="view-img" src="" class="w-full h-auto object-contain viewer-content">
+            <div class="w-full md:w-3/5 bg-slate-100 rounded-[2.5rem] overflow-hidden shadow-2xl viewer-img-container">
+                <img id="view-img" src="" class="max-w-full max-h-full object-contain">
             </div>
             
-            <!-- Texto -->
             <div class="w-full md:w-2/5 space-y-6 text-left p-2">
                 <div>
                     <span id="view-date" class="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]"></span>
@@ -229,7 +227,7 @@
         let memories = [];
         let base64Image = "";
 
-        // Login Logic
+        // Login
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const pass = document.getElementById('password-input').value.toLowerCase().trim();
@@ -273,7 +271,6 @@
             updateTimer();
         }
 
-        // File handling
         document.getElementById('in-file').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -296,16 +293,13 @@
             base64Image = "";
         };
 
-        // Lightbox Logic
         window.openViewer = (id) => {
             const m = memories.find(item => item.id === id);
             if(!m) return;
-            
             document.getElementById('view-img').src = m.url || '';
             document.getElementById('view-title').innerText = m.title;
             document.getElementById('view-date').innerText = new Date(m.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
             document.getElementById('view-content').innerText = m.content;
-            
             document.getElementById('viewer-modal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             lucide.createIcons();
@@ -329,7 +323,7 @@
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
             btn.disabled = true;
-            btn.innerText = "Subiendo...";
+            btn.innerText = "Guardando...";
 
             try {
                 const newMem = {
@@ -350,8 +344,7 @@
             }
         });
 
-        window.deleteItem = async (e, id) => {
-            e.stopPropagation(); // Evitar que se abra el visor al borrar
+        window.deleteItem = async (id) => {
             if(confirm('¿Borrar recuerdo?')) {
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
             }
@@ -364,51 +357,48 @@
             const titles = { photo: 'FOTOS', letter: 'CARTAS', moment: 'DIARIO' };
             titleEl.innerText = titles[currentTab];
 
-            // Tabs Styling
             ['photo', 'letter', 'moment'].forEach(tab => {
                 const b1 = document.getElementById(`btn-${tab}`);
                 const b2 = document.getElementById(`m-btn-${tab}`);
                 const active = tab === currentTab;
-                if(b1) b1.className = `nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all font-black uppercase text-[11px] ${active ? 'bg-red-600 text-white shadow-lg' : 'text-slate-400 hover:bg-rose-50'}`;
-                if(b2) b2.className = `flex flex-col items-center gap-1 transition-all ${active ? 'text-red-600 scale-105' : 'text-slate-400'}`;
+                if(b1) b1.className = `nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all font-black uppercase text-[11px] ${active ? 'bg-red-600 text-white shadow-lg shadow-red-100 scale-105' : 'text-slate-400 hover:bg-rose-50'}`;
+                if(b2) b2.className = `flex flex-col items-center gap-1 transition-all ${active ? 'text-red-600 scale-110' : 'text-slate-400'}`;
             });
 
             const filtered = memories.filter(m => m.type === currentTab);
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-xs animate-fade">No hay nada aquí aún...</div>`;
+                container.innerHTML = `<div class="col-span-full py-16 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px] animate-fade">Aún no hay recuerdos aquí... ❤️</div>`;
             }
 
             filtered.forEach(m => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-[2rem] shadow-sm overflow-hidden border border-rose-50 relative group h-80 flex flex-col animate-fade cursor-pointer";
+                card.className = "bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-rose-100 relative group h-[22rem] flex flex-col animate-fade cursor-pointer transition-all hover:shadow-xl";
                 
                 if (m.type === 'photo') {
                     card.onclick = () => openViewer(m.id);
                     card.innerHTML = `
-                        <img src="${m.url}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity"></div>
-                        <div class="absolute bottom-6 left-6 right-6 text-white translate-y-2 group-hover:translate-y-0 transition-transform">
-                            <p class="text-[8px] font-black opacity-60 mb-1 uppercase tracking-widest">${new Date(m.date).toLocaleDateString()}</p>
-                            <p class="font-black text-lg leading-tight uppercase tracking-tighter">${m.title}</p>
+                        <img src="${m.url}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-70 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="absolute bottom-8 left-8 right-8 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                            <p class="text-[9px] font-black opacity-60 mb-1 uppercase tracking-[0.3em]">${new Date(m.date).toLocaleDateString()}</p>
+                            <p class="font-black text-xl leading-none uppercase tracking-tighter">${m.title}</p>
                         </div>`;
                 } else {
                     card.innerHTML = `
-                        <div class="p-8 h-full flex flex-col">
-                            <span class="text-[8px] font-black text-red-500 uppercase tracking-[0.3em] mb-4">${new Date(m.date).toLocaleDateString()}</span>
-                            <h3 class="font-black text-xl mb-3 text-slate-900 leading-tight uppercase tracking-tighter">${m.title}</h3>
-                            <p class="text-slate-500 text-xs font-bold line-clamp-6 leading-relaxed flex-1">${m.content}</p>
-                            <div class="mt-4 flex items-center gap-2 text-red-400">
-                                <i data-lucide="arrow-right" size="14"></i>
-                                <span class="text-[8px] font-black uppercase tracking-widest">Leer más</span>
-                            </div>
+                        <div class="p-10 h-full flex flex-col">
+                            <span class="text-[10px] font-black text-red-500 uppercase tracking-[0.4em] mb-6 border-b border-rose-100 pb-4 inline-block">${new Date(m.date).toLocaleDateString()}</span>
+                            <h3 class="font-black text-2xl mb-4 text-slate-900 leading-none uppercase tracking-tighter">${m.title}</h3>
+                            <p class="text-slate-500 text-sm font-bold line-clamp-6 leading-relaxed flex-1 italic">"${m.content}"</p>
                         </div>`;
                 }
                 
-                // Botón de borrar
                 const delBtn = document.createElement('button');
-                delBtn.onclick = (e) => deleteItem(e, m.id);
-                delBtn.className = "absolute top-4 right-4 p-2 bg-white/90 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white shadow-md z-20";
-                delBtn.innerHTML = `<i data-lucide="trash-2" size="14"></i>`;
+                delBtn.className = "absolute top-6 right-6 p-2 bg-white/95 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white shadow-lg z-20";
+                delBtn.innerHTML = `<i data-lucide="trash-2" size="16"></i>`;
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteItem(m.id);
+                };
                 card.appendChild(delBtn);
                 
                 container.appendChild(card);
