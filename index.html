@@ -3,463 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E & J | Invictos</title>
+    <title>Evelyn & Juan | Invictos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,900;1,900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
         .font-romance { font-family: 'Dancing Script', cursive; }
+        .font-serif-bold { font-family: 'Playfair Display', serif; }
         
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(254, 226, 226, 0.3); }
+        .sidebar-active { background: #0f172a; color: white; }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade { animation: fadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .animate-fade { animation: fadeIn 0.6s ease-out forwards; }
         
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
         .heart-particle {
             position: fixed;
-            top: -10%;
+            top: -20px;
+            color: #fb7185;
             user-select: none;
             pointer-events: none;
             z-index: 0;
             animation: fall linear forwards;
-            color: #fb7185;
-            opacity: 0.6;
+            opacity: 0.3;
+        }
+        @keyframes fall {
+            to { transform: translateY(105vh) rotate(360deg); }
         }
 
-        @keyframes fall {
-            to { transform: translateY(110vh) rotate(360deg); }
-        }
-        
-        .bg-hearts {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            opacity: 0.03;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23e11d48' stroke='none'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
-            background-size: 80px 80px;
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
         .recording-pulse {
             animation: pulse-red 1.5s infinite;
+            background-color: #e11d48 !important;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(244, 63, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
         }
 
-        @keyframes pulse-red {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
+        audio::-webkit-media-controls-panel { background-color: #f8fafc; }
     </style>
 </head>
-<body class="bg-[#fffcfc] text-slate-800 min-h-screen">
-    <div class="bg-hearts"></div>
-    <div id="heart-container"></div>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
 
-    <!-- LOGIN -->
-    <div id="login-screen" class="fixed inset-0 z-[100] bg-white flex items-center justify-center p-4">
-        <div class="max-w-md w-full text-center space-y-8 animate-fade">
-            <div class="w-24 h-24 bg-rose-50 text-red-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                <i data-lucide="heart" fill="currentColor" size="40" class="animate-pulse"></i>
+    <div id="hearts-container" class="fixed inset-0 pointer-events-none z-0"></div>
+
+    <!-- PANTALLA DE INICIO -->
+    <div id="login-screen" class="fixed inset-0 z-[100] bg-white flex items-center justify-center p-6">
+        <div class="max-w-md w-full text-center space-y-10 animate-fade">
+            <div class="w-20 h-20 bg-slate-50 text-rose-500 rounded-3xl flex items-center justify-center mx-auto shadow-sm">
+                <i data-lucide="heart" size="28" fill="currentColor"></i>
             </div>
-            <div class="space-y-2">
-                <h1 class="text-3xl font-black tracking-tighter uppercase italic">Evelyn & Juan</h1>
-                <p class="text-slate-400 font-bold text-xs uppercase tracking-widest">Nuestra Clave Especial</p>
+            <div class="space-y-3">
+                <h1 class="text-4xl font-black tracking-tighter uppercase italic text-slate-900">Evelyn & Juan</h1>
+                <p class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em]">Acceso Privado | Invictos</p>
             </div>
             <form id="login-form" class="space-y-4">
-                <input type="password" id="password-input" placeholder="¿Cuál es nuestra palabra?" 
-                    class="w-full bg-slate-50 p-5 rounded-3xl border-2 border-transparent focus:border-red-100 outline-none transition-all text-center font-bold">
-                <button type="submit" class="w-full bg-slate-900 text-white font-black py-5 rounded-3xl hover:bg-red-600 transition-all uppercase tracking-widest text-xs shadow-xl">
-                    Abrir Corazón
+                <input type="password" id="password-input" placeholder="Clave Especial" 
+                    class="w-full bg-slate-50 p-6 rounded-[2rem] border border-slate-100 focus:border-slate-300 outline-none transition-all text-center font-bold placeholder:text-slate-300">
+                <button type="submit" class="w-full bg-slate-900 text-white font-black py-6 rounded-[2rem] hover:bg-black transition-all uppercase tracking-widest text-xs shadow-lg">
+                    Entrar
                 </button>
+                <p id="error-message" class="hidden text-rose-500 text-[11px] font-black uppercase tracking-widest mt-4">No es la clave, mi amor</p>
             </form>
         </div>
     </div>
 
     <!-- APP PRINCIPAL -->
-    <div id="main-app" class="hidden">
-        
-        <!-- SIDEBAR -->
-        <aside class="hidden lg:flex flex-col w-72 fixed left-0 top-0 bottom-0 bg-white border-r border-rose-50 p-8 z-40 shadow-sm">
-            <div class="mb-12">
-                <span class="text-3xl font-black italic tracking-tighter text-red-600">E&J</span>
+    <div id="main-app" class="hidden flex min-h-screen relative z-10">
+        <!-- Sidebar Desktop -->
+        <aside class="hidden lg:flex flex-col w-72 fixed left-0 top-0 bottom-0 bg-white border-r border-slate-100 p-10 z-40">
+            <div class="mb-16">
+                <span class="text-2xl font-black italic tracking-tighter text-slate-900">Invictos</span>
             </div>
             <nav class="flex-1 space-y-2">
-                <button onclick="changeTab('home')" class="nav-link w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all text-sm group" data-tab="home">
-                    <i data-lucide="home" size="18"></i> <span>Inicio</span>
+                <button onclick="changeTab('home')" class="nav-link w-full flex items-center gap-4 p-5 rounded-2xl font-bold transition-all text-sm group" data-tab="home">
+                    <i data-lucide="layout-grid" size="18"></i> <span>Dashboard</span>
                 </button>
-                <button onclick="changeTab('gallery')" class="nav-link w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all text-sm group" data-tab="gallery">
+                <button onclick="changeTab('gallery')" class="nav-link w-full flex items-center gap-4 p-5 rounded-2xl font-bold transition-all text-sm group" data-tab="gallery">
                     <i data-lucide="image" size="18"></i> <span>Galería</span>
                 </button>
-                <button onclick="changeTab('music')" class="nav-link w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all text-sm group" data-tab="music">
-                    <i data-lucide="play-circle" size="18"></i> <span>Playlists</span>
+                <button onclick="changeTab('music')" class="nav-link w-full flex items-center gap-4 p-5 rounded-2xl font-bold transition-all text-sm group" data-tab="music">
+                    <i data-lucide="music-4" size="18"></i> <span>Carpeta Musical</span>
                 </button>
-                <button onclick="changeTab('diary')" class="nav-link w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all text-sm group" data-tab="diary">
-                    <i data-lucide="mic" size="18"></i> <span>Diario & Voz</span>
+                <button onclick="changeTab('diary')" class="nav-link w-full flex items-center gap-4 p-5 rounded-2xl font-bold transition-all text-sm group" data-tab="diary">
+                    <i data-lucide="mic" size="18"></i> <span>Diario & Audios</span>
                 </button>
             </nav>
-            <div class="pt-8 border-t border-rose-50 text-center">
-                <p class="text-[9px] font-black uppercase text-slate-300 tracking-[0.3em]">Invictos 16-05</p>
-            </div>
         </aside>
 
-        <!-- NAV MÓVIL -->
-        <nav class="lg:hidden fixed bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md shadow-2xl border border-rose-50 rounded-[2rem] flex justify-around p-4 z-50">
-            <button onclick="changeTab('home')" class="nav-link-m p-3 rounded-2xl transition-all" data-tab="home"><i data-lucide="home"></i></button>
-            <button onclick="changeTab('gallery')" class="nav-link-m p-3 rounded-2xl transition-all" data-tab="gallery"><i data-lucide="image"></i></button>
-            <button onclick="changeTab('music')" class="nav-link-m p-3 rounded-2xl transition-all" data-tab="music"><i data-lucide="play-circle"></i></button>
-            <button onclick="changeTab('diary')" class="nav-link-m p-3 rounded-2xl transition-all" data-tab="diary"><i data-lucide="mic"></i></button>
+        <!-- Nav Mobile -->
+        <nav class="lg:hidden fixed bottom-6 left-6 right-6 bg-white border border-slate-100 shadow-2xl rounded-[2.5rem] flex justify-around p-3 z-50">
+            <button onclick="changeTab('home')" class="nav-link-m p-4 rounded-2xl transition-all" data-tab="home"><i data-lucide="layout-grid" size="20"></i></button>
+            <button onclick="changeTab('gallery')" class="nav-link-m p-4 rounded-2xl transition-all" data-tab="gallery"><i data-lucide="image" size="20"></i></button>
+            <button onclick="changeTab('music')" class="nav-link-m p-4 rounded-2xl transition-all" data-tab="music"><i data-lucide="music-4" size="20"></i></button>
+            <button onclick="changeTab('diary')" class="nav-link-m p-4 rounded-2xl transition-all" data-tab="diary"><i data-lucide="mic" size="20"></i></button>
         </nav>
 
-        <!-- CONTENIDO -->
-        <main class="lg:pl-72 min-h-screen">
-            <!-- SECCIÓN: INICIO -->
-            <section id="tab-home" class="tab-content active p-6 lg:p-12 animate-fade">
-                <div class="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[90vh] text-center space-y-12 relative z-10">
-                    <div class="space-y-4">
-                        <p class="text-[10px] font-black uppercase tracking-[0.5em] text-red-400">Nuestro tiempo juntos</p>
-                        <div id="countdown" class="flex gap-6 md:gap-12 justify-center items-baseline">
-                            <div class="flex flex-col"><span id="days" class="text-5xl md:text-6xl font-black tracking-tighter text-slate-900">00</span><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Días</span></div>
-                            <div class="flex flex-col"><span id="hours" class="text-5xl md:text-6xl font-black tracking-tighter text-slate-900">00</span><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Horas</span></div>
-                            <div class="flex flex-col"><span id="minutes" class="text-5xl md:text-6xl font-black tracking-tighter text-slate-900">00</span><span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Mins</span></div>
-                            <div class="flex flex-col"><span id="seconds" class="text-2xl md:text-3xl font-black tracking-tighter text-red-500 opacity-60">00</span><span class="text-[8px] font-bold text-slate-300 uppercase tracking-widest">Seg</span></div>
+        <main class="flex-1 lg:pl-72 bg-transparent min-h-screen relative">
+            <!-- SECCIÓN HOME -->
+            <section id="tab-home" class="tab-content active p-6 lg:p-12 h-screen overflow-y-auto">
+                <div class="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-full text-center space-y-12 animate-fade">
+                    <div class="flex gap-8 md:gap-16 justify-center items-center bg-white/60 backdrop-blur-md p-6 rounded-[2.5rem] border border-white shadow-sm w-full max-w-2xl">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Lima, Perú</span>
+                            <span id="clock-lima" class="text-3xl font-black text-slate-900 tracking-tighter">--:-- --</span>
                         </div>
-                    </div>
-                    <div class="glass p-10 md:p-16 rounded-[3rem] shadow-xl max-w-2xl">
-                        <i data-lucide="quote" class="text-rose-100" size="40"></i>
-                        <p class="text-lg md:text-xl font-medium text-slate-600 leading-relaxed italic">
-                            "Cada Kilometro, cada noche sin ti, cada pantalla que nos separa, han sido solo pruebas de nuestro amor."
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- SECCIÓN: DINÁMICA -->
-            <section id="tab-dynamic" class="tab-content p-6 lg:p-20 animate-fade">
-                <div class="max-w-6xl mx-auto">
-                    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-                        <div>
-                            <h2 id="page-title" class="text-5xl font-black tracking-tighter uppercase italic text-slate-900">Título</h2>
-                            <p id="page-subtitle" class="text-red-500 font-bold text-[10px] uppercase tracking-widest mt-2">Subtítulo</p>
-                        </div>
-                        <button onclick="openModal()" class="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-all shadow-xl">
-                            <i data-lucide="plus" size="18"></i> <span id="btn-text">Agregar</span>
-                        </button>
-                    </header>
-                    <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 pb-32"></div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- MODAL -->
-    <div id="item-modal" class="hidden fixed inset-0 z-[100] bg-black/40 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-white rounded-[3rem] w-full max-w-lg p-10 shadow-2xl space-y-6 animate-fade overflow-y-auto max-h-[90vh]">
-            <h3 id="modal-title" class="text-2xl font-black tracking-tighter uppercase italic">Nuevo Item</h3>
-            <form id="save-form" class="space-y-4">
-                <input id="in-title" required placeholder="Título" class="w-full bg-slate-50 p-5 rounded-2xl outline-none border-2 border-transparent focus:border-red-50 transition-all font-bold">
-                
-                <!-- Campos específicos para Música -->
-                <div id="music-fields" class="hidden">
-                    <input id="in-url" placeholder="Enlace de la Playlist de YouTube" class="w-full bg-slate-50 p-5 rounded-2xl outline-none border-2 border-transparent focus:border-red-50 transition-all font-bold">
-                </div>
-
-                <!-- Botón de Grabación para Diario -->
-                <div id="voice-record-container" class="hidden space-y-4">
-                    <div class="flex items-center gap-4 bg-slate-50 p-5 rounded-2xl border-2 border-rose-50">
-                        <button type="button" id="record-btn" class="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center transition-all hover:bg-red-200">
-                            <i data-lucide="mic" id="record-icon"></i>
-                        </button>
-                        <div class="flex-1">
-                            <p id="record-status" class="text-[10px] font-black uppercase text-slate-400">Grabación de voz opcional</p>
-                            <div id="timer" class="text-sm font-bold hidden">00:00</div>
-                        </div>
-                        <button type="button" id="delete-voice" class="hidden text-slate-300 hover:text-red-500"><i data-lucide="x"></i></button>
-                    </div>
-                    <audio id="audio-preview" controls class="hidden w-full h-10"></audio>
-                </div>
-
-                <div id="photo-upload">
-                    <label class="flex items-center justify-center gap-3 w-full bg-slate-50 p-8 rounded-2xl border-2 border-dashed border-rose-100 cursor-pointer hover:bg-rose-50 transition-all">
-                        <i data-lucide="image" class="text-slate-400"></i>
-                        <span id="file-status" class="text-sm font-bold text-slate-400">Imagen de portada</span>
-                        <input id="in-file" type="file" accept="image/*" class="hidden">
-                    </label>
-                </div>
-
-                <textarea id="in-desc" placeholder="Escribe aquí..." class="w-full bg-slate-50 p-5 rounded-2xl outline-none border-2 border-transparent focus:border-red-50 transition-all font-bold h-32 resize-none"></textarea>
-                
-                <div class="flex gap-4 pt-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 text-slate-400 font-black text-[10px] uppercase tracking-widest">Cancelar</button>
-                    <button id="save-btn" type="submit" class="flex-1 bg-red-600 text-white p-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = JSON.parse('{"apiKey": "AIzaSyDjZL-biMikywR0Z64UjLMYL0voGHOhbfQ", "authDomain": "nuestro-espacio-1605.firebaseapp.com", "projectId": "nuestro-espacio-1605", "storageBucket": "nuestro-espacio-1605.firebasestorage.app", "messagingSenderId": "838302204888", "appId": "1:838302204888:web:d983170110c78383bcf28ad"}');
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const appId = "invictos-web-v3";
-
-        let activeTab = 'home';
-        let allItems = [];
-        let base64Img = "";
-        let voiceBase64 = "";
-        
-        // Grabación de Voz
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-
-        // LOGIN
-        document.getElementById('login-form').onsubmit = (e) => {
-            e.preventDefault();
-            const pass = document.getElementById('password-input').value.toLowerCase().trim();
-            if(['invictos', '1605'].includes(pass)) {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                initApp();
-                startHearts();
-            }
-        };
-
-        function startHearts() {
-            const container = document.getElementById('heart-container');
-            setInterval(() => {
-                const heart = document.createElement('div');
-                heart.className = 'heart-particle';
-                heart.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
-                heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
-                container.appendChild(heart);
-                setTimeout(() => heart.remove(), 7000);
-            }, 600);
-        }
-
-        window.changeTab = (tab) => {
-            activeTab = tab;
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            if(tab === 'home') {
-                document.getElementById('tab-home').classList.add('active');
-            } else {
-                document.getElementById('tab-dynamic').classList.add('active');
-                updateHeaders();
-            }
-            updateNav();
-            renderGrid();
-        };
-
-        function updateHeaders() {
-            const h = { 
-                gallery: { t: 'Galería', s: 'Nuestros momentos', b: 'Agregar' },
-                music: { t: 'Playlists', s: 'Nuestra música', b: 'Vincular' },
-                diary: { t: 'Diario & Voz', s: 'Palabras y sentimientos', b: 'Escribir' }
-            };
-            document.getElementById('page-title').innerText = h[activeTab].t;
-            document.getElementById('page-subtitle').innerText = h[activeTab].s;
-            document.getElementById('btn-text').innerText = h[activeTab].b;
-        }
-
-        function updateNav() {
-            document.querySelectorAll('.nav-link, .nav-link-m').forEach(link => {
-                const active = link.dataset.tab === activeTab;
-                if(link.classList.contains('nav-link')) {
-                    link.className = `nav-link w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all text-sm ${active ? 'bg-red-600 text-white shadow-lg' : 'text-slate-400 hover:bg-rose-50'}`;
-                } else {
-                    link.className = `nav-link-m p-3 rounded-2xl transition-all ${active ? 'bg-red-50 text-red-600' : 'text-slate-400'}`;
-                }
-            });
-        }
-
-        function initApp() {
-            onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'memories')), (snap) => {
-                allItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                renderGrid();
-            }, (err) => console.log(err));
-            initTimer();
-            lucide.createIcons();
-        }
-
-        function renderGrid() {
-            if(activeTab === 'home') return;
-            const grid = document.getElementById('items-grid');
-            grid.innerHTML = '';
-            const filtered = allItems.filter(m => m.type === activeTab).sort((a,b) => new Date(b.created) - new Date(a.created));
-
-            filtered.forEach(m => {
-                const card = document.createElement('div');
-                card.className = "bg-white rounded-[2.5rem] border border-rose-50 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col";
-                
-                let mediaHtml = '';
-                if(activeTab === 'music') {
-                    mediaHtml = `
-                        <div class="aspect-video relative">
-                            <img src="${m.image || 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=800'}" class="w-full h-full object-cover">
-                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                                <a href="${m.url}" target="_blank" class="bg-white p-4 rounded-full text-red-600"><i data-lucide="play" fill="currentColor"></i></a>
-                            </div>
-                        </div>`;
-                } else if(m.image) {
-                    mediaHtml = `<div class="aspect-video overflow-hidden"><img src="${m.image}" class="w-full h-full object-cover"></div>`;
-                }
-
-                let voiceHtml = m.voice ? `
-                    <div class="mt-4 p-4 bg-rose-50 rounded-2xl flex items-center gap-3">
-                        <button onclick="playVoice('${m.voice}', this)" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-500 shadow-sm">
-                            <i data-lucide="play" size="16"></i>
-                        </button>
-                        <div class="text-[9px] font-black uppercase text-red-400 tracking-widest">Nota de voz guardada</div>
-                    </div>` : '';
-
-                card.innerHTML = `
-                    ${mediaHtml}
-                    <div class="p-8 flex-1 flex flex-col">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[9px] font-black text-slate-300 uppercase tracking-widest">${new Date(m.created).toLocaleDateString()}</span>
-                            <button onclick="deleteItem('${m.id}')" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-all"><i data-lucide="trash-2" size="14"></i></button>
-                        </div>
-                        <h4 class="text-xl font-black uppercase italic tracking-tighter mb-2">${m.title}</h4>
-                        <p class="text-slate-500 text-sm leading-relaxed italic flex-1">${m.content}</p>
-                        ${voiceHtml}
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-            lucide.createIcons();
-        }
-
-        window.openModal = () => {
-            document.getElementById('item-modal').classList.remove('hidden');
-            document.getElementById('music-fields').classList.toggle('hidden', activeTab !== 'music');
-            document.getElementById('voice-record-container').classList.toggle('hidden', activeTab !== 'diary');
-        };
-
-        window.closeModal = () => {
-            document.getElementById('item-modal').classList.add('hidden');
-            document.getElementById('save-form').reset();
-            document.getElementById('file-status').innerText = "Imagen de portada";
-            document.getElementById('audio-preview').classList.add('hidden');
-            document.getElementById('delete-voice').classList.add('hidden');
-            base64Img = "";
-            voiceBase64 = "";
-        };
-
-        // Lógica de grabación
-        const recordBtn = document.getElementById('record-btn');
-        const recordIcon = document.getElementById('record-icon');
-        const recordStatus = document.getElementById('record-status');
-        const audioPreview = document.getElementById('audio-preview');
-
-        recordBtn.onclick = async () => {
-            if (!isRecording) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-                    
-                    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-                    mediaRecorder.onstop = () => {
-                        const blob = new Blob(audioChunks, { type: 'audio/mp3' });
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                            voiceBase64 = reader.result;
-                            audioPreview.src = voiceBase64;
-                            audioPreview.classList.remove('hidden');
-                            document.getElementById('delete-voice').classList.remove('hidden');
-                        };
-                        reader.readAsDataURL(blob);
-                    };
-
-                    mediaRecorder.start();
-                    isRecording = true;
-                    recordBtn.classList.add('recording-pulse', 'bg-red-600', 'text-white');
-                    recordStatus.innerText = "Grabando...";
-                } catch (err) {
-                    alert("Necesitamos permiso para el micrófono");
-                }
-            } else {
-                mediaRecorder.stop();
-                isRecording = false;
-                recordBtn.classList.remove('recording-pulse', 'bg-red-600', 'text-white');
-                recordStatus.innerText = "Grabación lista ✓";
-            }
-        };
-
-        document.getElementById('delete-voice').onclick = () => {
-            voiceBase64 = "";
-            audioPreview.classList.add('hidden');
-            document.getElementById('delete-voice').classList.add('hidden');
-            recordStatus.innerText = "Grabación de voz opcional";
-        };
-
-        document.getElementById('in-file').onchange = (e) => {
-            const file = e.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    base64Img = ev.target.result;
-                    document.getElementById('file-status').innerText = "Imagen lista ✓";
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-
-        document.getElementById('save-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('save-btn');
-            btn.disabled = true;
-            btn.innerText = "Guardando...";
-
-            const data = {
-                type: activeTab,
-                title: document.getElementById('in-title').value,
-                url: document.getElementById('in-url')?.value || "",
-                content: document.getElementById('in-desc').value,
-                image: base64Img,
-                voice: voiceBase64,
-                created: new Date().toISOString()
-            };
-
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data);
-            btn.disabled = false;
-            btn.innerText = "Guardar";
-            closeModal();
-        };
-
-        window.playVoice = (src, btn) => {
-            const audio = new Audio(src);
-            audio.play();
-            btn.classList.add('animate-pulse');
-            audio.onended = () => btn.classList.remove('animate-pulse');
-        };
-
-        window.deleteItem = async (id) => {
-            if(confirm('¿Eliminar este recuerdo?')) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
-        };
-
-        function initTimer() {
-            const start = new Date('2025-05-16T00:00:00');
-            setInterval(() => {
-                const now = new Date();
-                const diff = Math.floor((now - start) / 1000);
-                document.getElementById('days').innerText = Math.floor(diff / 86400).toString().padStart(2, '0');
-                document.getElementById('hours').innerText = Math.floor((diff % 86400) / 3600).toString().padStart(2, '0');
-                document.getElementById('minutes').innerText = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
-                document.getElementById('seconds').innerText = Math.floor(diff % 60).toString().padStart(2, '0');
-            }, 1000);
-        }
-
-        lucide.createIcons();
-    </script>
-</body>
-</html>
+                        <div class="h-10 w-px bg-slate-200"></div>
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Guanare, Ven</span>
+                            <span id="clock-guanare" class
