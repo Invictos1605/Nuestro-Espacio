@@ -1,388 +1,391 @@
-<!-- Chosen Palette: Red Passion (bg-red-50, text-red-900, accents red-600) -->
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invictos - Evelyn y Juan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Nunito:wght@300;400;600;700&family=Playfair+Display:italic,wght@0,400;0,700;1,400&display=swap');
+import React, { useState, useEffect } from 'react';
+import { Heart, Image as ImageIcon, FileText, Video, Lock, LogIn, Calendar, X, Plus, Music, Loader, Trash2 } from 'lucide-react';
 
-        body { font-family: 'Nunito', sans-serif; overflow-x: hidden; }
+// Importar Firebase
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
+import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, doc } from 'firebase/firestore';
+
+// --- CONFIGURACIÓN DE FIREBASE ACTUALIZADA ---
+const firebaseConfig = {
+  apiKey: "AIzaSyDjZL-biMIkywR0Z64UjLMYL0voGHOhbfQ",
+  authDomain: "nuestro-espacio-1605.firebaseapp.com",
+  projectId: "nuestro-espacio-1605",
+  storageBucket: "nuestro-espacio-1605.firebasestorage.app",
+  messagingSenderId: "838302204888",
+  appId: "1:838302204888:web:e17d8a1251bcb2d8cf28ad",
+  measurementId: "G-MET7EL0S9X"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'nuestro-espacio-1605';
+
+// Componente principal
+export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
+  const [firebaseUser, setFirebaseUser] = useState(null); 
+  const [loading, setLoading] = useState(true);
+
+  // Autenticación técnica con Firebase
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (error) {
+        console.error("Error de autenticación:", error);
+      }
+    };
+    
+    initAuth();
+    
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setFirebaseUser(u);
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-red-50 flex items-center justify-center text-red-400">
+        <Loader className="animate-spin" size={32} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-red-50 font-sans text-slate-800">
+      {isLoggedIn && firebaseUser ? (
+        <MainApp logout={() => setIsLoggedIn(false)} />
+      ) : (
+        <LoginScreen onLogin={() => setIsLoggedIn(true)} />
+      )}
+    </div>
+  );
+}
+
+// --- Pantalla de Login ---
+function LoginScreen({ onLogin }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const validPasswords = ["invictos", "16052025"];
+    
+    if (validPasswords.includes(password.toLowerCase().trim())) {
+      onLogin();
+    } else {
+      setError("Esa no es nuestra palabra mágica... Inténtalo de nuevo.");
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-red-100 to-orange-50">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-red-100 relative overflow-hidden animate-fade-in">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-red-700"></div>
         
-        /* Estilo para los nombres y títulos románticos */
-        .remachine-style { 
-            font-family: 'Dancing Script', cursive;
-            font-weight: 700;
-        }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(254, 202, 202, 0.5);
-        }
-
-        .fade-in { animation: fadeIn 0.8s ease-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .hero-gradient {
-            background: linear-gradient(to bottom, rgba(254, 242, 242, 0) 0%, rgba(254, 242, 242, 1) 100%);
-        }
-
-        /* Estilo de papel de carta para los mensajes */
-        .letter-paper {
-            background-color: #fff9f0;
-            background-image: linear-gradient(#e5e5e5 1px, transparent 1px);
-            background-size: 100% 2rem;
-            line-height: 2rem;
-        }
-
-        /* Animación de corazones cayendo */
-        .heart-particle {
-            position: fixed;
-            top: -10%;
-            user-select: none;
-            pointer-events: none;
-            z-index: 1;
-            animation: fall linear forwards;
-        }
-
-        @keyframes fall {
-            to { transform: translateY(110vh) rotate(360deg); }
-        }
-
-        .loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: white;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s;
-        }
-    </style>
-</head>
-<body class="bg-red-50 text-slate-800 min-h-screen">
-
-    <!-- Pantalla de Carga Inicial -->
-    <div id="loader" class="loading-overlay">
-        <div class="text-center">
-            <i class="fa-solid fa-heart text-red-600 text-5xl animate-pulse"></i>
-            <p class="mt-4 text-slate-400 font-bold tracking-widest uppercase text-xs">Abriendo vuestro mundo...</p>
-            <button id="retry-btn" onclick="location.reload()" class="hidden mt-6 text-red-500 underline text-sm">¿Tarda demasiado? Haz clic aquí para refrescar</button>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 text-red-500 rounded-full mb-4 animate-pulse">
+            <Heart fill="currentColor" size={32} />
+          </div>
+          <h1 className="text-3xl font-bold text-slate-800">Evelyn y Juan</h1>
+          <p className="text-slate-500 mt-2 italic">Nuestro rincón secreto</p>
         </div>
-    </div>
 
-    <!-- PANTALLA DE LOGIN -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-red-100 to-orange-50 p-4 hidden">
-        <div class="glass-panel p-8 rounded-3xl shadow-2xl w-full max-w-md text-center relative overflow-hidden fade-in">
-            <div class="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-red-100 text-red-600 rounded-full mb-6">
-                <i class="fa-solid fa-heart text-4xl"></i>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Introduce la palabra clave</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock size={18} className="text-slate-400" />
+              </div>
+              <input
+                type="password"
+                autoFocus
+                className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-300 focus:border-red-300 transition-colors bg-slate-50"
+                placeholder="Nuestra palabra clave..."
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <h1 class="text-4xl font-bold text-red-700 mb-2">Evelyn y Juan</h1>
-            <p class="text-slate-500 mb-8 italic">Introduce nuestra palabra mágica</p>
-            
-            <form id="login-form" class="space-y-4">
-                <input type="password" id="password-input" 
-                    class="w-full px-4 py-3 rounded-xl border border-red-200 focus:border-red-500 outline-none text-center text-lg" 
-                    placeholder="Palabra clave..." autocomplete="off">
-                <div id="login-error" class="hidden text-red-500 text-sm font-bold">Esa no es nuestra clave... ❤️</div>
-                <button type="submit" 
-                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl shadow-lg transition-transform transform hover:scale-105">
-                    Entrar a nuestro mundo
-                </button>
-            </form>
+          </div>
+
+          {error && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">{error}</p>}
+
+          <button
+            type="submit"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] shadow-md shadow-red-200"
+          >
+            Entrar a nuestro mundo
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// --- Aplicación Principal ---
+function MainApp({ logout }) {
+  const [activeTab, setActiveTab] = useState('gallery');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [memories, setMemories] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  useEffect(() => {
+    if (!auth.currentUser) return;
+    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'memories'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      docs.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setMemories(docs);
+      setLoadingData(false);
+    }, (error) => {
+      console.error("Firestore Error:", error);
+      setLoadingData(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const addNewMemory = async (newMemory) => {
+    if (!auth.currentUser) return;
+    const { id, ...memoryData } = newMemory;
+    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), {
+      ...memoryData,
+      createdAt: new Date().toISOString()
+    });
+    setShowAddModal(false);
+  };
+
+  const deleteMemory = async (e, id) => {
+    e.stopPropagation();
+    if (!auth.currentUser) return;
+    if (window.confirm("¿Quieres borrar este recuerdo para siempre?")) {
+      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
+    }
+  };
+
+  const filteredMemories = memories.filter(m => {
+    if (activeTab === 'gallery') return m.type === 'photo';
+    if (activeTab === 'letters') return m.type === 'letter';
+    if (activeTab === 'moments') return m.type === 'moment';
+    return true;
+  });
+
+  return (
+    <div className="pb-20 md:pb-0 md:pl-64 min-h-screen">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-red-100 flex justify-around p-3 z-50 shadow-lg">
+        <NavBtn icon={ImageIcon} active={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} label="Fotos" />
+        <NavBtn icon={FileText} active={activeTab === 'letters'} onClick={() => setActiveTab('letters')} label="Cartas" />
+        <NavBtn icon={Calendar} active={activeTab === 'moments'} onClick={() => setActiveTab('moments')} label="Momentos" />
+      </div>
+
+      <div className="hidden md:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-white border-r border-red-100 p-6 z-40">
+        <div className="flex items-center gap-2 mb-8 text-red-600">
+          <Heart fill="currentColor" size={24} />
+          <span className="font-bold text-xl tracking-tight">Evelyn y Juan</span>
         </div>
-    </div>
-
-    <!-- APLICACIÓN PRINCIPAL -->
-    <div id="main-app" class="hidden min-h-screen flex flex-col md:flex-row">
-        <!-- Navegación lateral -->
-        <nav class="w-full md:w-64 bg-white shadow-xl z-40 flex flex-col fixed md:sticky top-0 h-16 md:h-screen">
-            <div class="p-4 md:p-6 flex items-center justify-between md:flex-col md:items-start h-full">
-                <div class="flex items-center gap-2 text-red-600">
-                    <i class="fa-solid fa-heart"></i>
-                    <span class="text-xl font-bold remachine-style">Invictos</span>
-                </div>
-                
-                <!-- Botones de navegación (PC) -->
-                <div class="hidden md:flex flex-col gap-2 mt-10 w-full">
-                    <button onclick="switchTab('dashboard')" class="tab-btn w-full text-left p-3 rounded-xl bg-red-50 text-red-600 font-bold" data-tab="dashboard">
-                        <i class="fa-solid fa-house mr-3"></i> Portada
-                    </button>
-                    <button onclick="switchTab('gallery')" class="tab-btn w-full text-left p-3 rounded-xl text-slate-600 font-semibold" data-tab="gallery">
-                        <i class="fa-solid fa-camera mr-3"></i> Fotos
-                    </button>
-                    <button onclick="switchTab('letters')" class="tab-btn w-full text-left p-3 rounded-xl text-slate-600 font-semibold" data-tab="letters">
-                        <i class="fa-solid fa-envelope mr-3"></i> Cartas
-                    </button>
-                    <button onclick="switchTab('moments')" class="tab-btn w-full text-left p-3 rounded-xl text-slate-600 font-semibold" data-tab="moments">
-                        <i class="fa-solid fa-star mr-3"></i> Momentos
-                    </button>
-                </div>
-                
-                <!-- Botones de navegación (Móvil) -->
-                <div class="md:hidden flex gap-4">
-                    <button onclick="switchTab('dashboard')" class="text-red-600 p-2"><i class="fa-solid fa-house"></i></button>
-                    <button onclick="switchTab('gallery')" class="text-slate-400 p-2"><i class="fa-solid fa-camera"></i></button>
-                    <button onclick="switchTab('letters')" class="text-slate-400 p-2"><i class="fa-solid fa-envelope"></i></button>
-                    <button onclick="switchTab('moments')" class="text-slate-400 p-2"><i class="fa-solid fa-star"></i></button>
-                </div>
-            </div>
+        
+        <nav className="flex-1 space-y-2">
+          <SidebarBtn icon={ImageIcon} active={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} label="Nuestras Fotos" />
+          <SidebarBtn icon={FileText} active={activeTab === 'letters'} onClick={() => setActiveTab('letters')} label="Cartas de Amor" />
+          <SidebarBtn icon={Calendar} active={activeTab === 'moments'} onClick={() => setActiveTab('moments')} label="Momentos" />
         </nav>
 
-        <main class="flex-1 overflow-x-hidden relative z-10">
-            <!-- Pestaña: Portada -->
-            <div id="tab-dashboard" class="tab-content fade-in min-h-screen flex flex-col">
-                <div class="relative w-full h-[55vh] overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1518199266791-bd373152a558?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 hero-gradient"></div>
-                </div>
-                <div class="max-w-4xl mx-auto px-6 py-12 text-center -mt-32 relative z-10">
-                    <div class="bg-white/90 backdrop-blur-md p-10 rounded-[3rem] shadow-2xl border border-red-100">
-                        <p class="serif-quote text-2xl text-slate-700 italic mb-10">
-                            "Cada kilómetro, cada noche sin ti... somos <span class="text-red-600 font-bold remachine-style text-4xl block mt-4">Invictos</span>."
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pestaña: Galería -->
-            <div id="tab-gallery" class="tab-content hidden fade-in p-6">
-                <h2 class="text-4xl font-bold text-red-900 mb-10 remachine-style">Nuestras fotos</h2>
-                <div id="gallery-container" class="grid grid-cols-2 md:grid-cols-3 gap-6"></div>
-            </div>
-
-            <!-- Pestaña: Cartas -->
-            <div id="tab-letters" class="tab-content hidden fade-in p-6">
-                <h2 class="text-4xl font-bold text-red-900 mb-10 remachine-style">Mis cartas para ti</h2>
-                <div id="letters-container" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
-            </div>
-
-            <!-- Pestaña: Momentos -->
-            <div id="tab-moments" class="tab-content hidden fade-in p-6">
-                <h2 class="text-4xl font-bold text-red-900 mb-10 remachine-style">Nuestra línea del tiempo</h2>
-                <div id="moments-container" class="relative max-w-3xl mx-auto pl-8 border-l-2 border-red-200 space-y-12"></div>
-            </div>
-        </main>
-
-        <!-- Botón flotante para añadir contenido -->
-        <button onclick="toggleModal()" class="fixed bottom-8 right-8 w-16 h-16 bg-red-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-50 hover:scale-110 transition-transform">
-            <i class="fa-solid fa-plus"></i>
+        <button onClick={logout} className="mt-auto flex items-center gap-2 text-slate-400 hover:text-red-500 transition-colors text-sm">
+          <LogIn size={16} className="rotate-180" /> Cerrar Sesión
         </button>
-    </div>
+      </div>
 
-    <!-- MODAL PARA AÑADIR CONTENIDO -->
-    <div id="add-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl">
-            <h3 class="text-2xl font-bold mb-8 remachine-style">Nuevo Recuerdo</h3>
-            <form id="add-form" class="space-y-5">
-                <select id="new-type" class="w-full p-4 border rounded-2xl bg-slate-50 outline-none">
-                    <option value="photo">Foto (URL)</option>
-                    <option value="letter">Carta</option>
-                    <option value="moment">Momento</option>
-                </select>
-                <input type="text" id="new-title" placeholder="Título" class="w-full p-4 border rounded-2xl outline-none" required>
-                <textarea id="new-content" placeholder="Escribe aquí o pega la URL de la imagen..." class="w-full p-4 border rounded-2xl outline-none h-32" required></textarea>
-                <div class="flex gap-4 pt-4">
-                    <button type="button" onclick="toggleModal()" class="flex-1 py-4 text-slate-500 font-bold">Cancelar</button>
-                    <button id="submit-btn" type="submit" class="flex-1 py-4 bg-red-600 text-white font-bold rounded-2xl shadow-lg">Guardar</button>
-                </div>
-            </form>
+      <main className="p-4 md:p-8 max-w-5xl mx-auto">
+        <header className="flex justify-between items-end mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-slate-800">
+              {activeTab === 'gallery' && 'Nuestras Fotos'}
+              {activeTab === 'letters' && 'Cartas para Ti'}
+              {activeTab === 'moments' && 'Momentos Especiales'}
+            </h2>
+            <p className="text-slate-500 mt-1 italic">Bienvenido a nuestro espacio, Mi amor</p>
+          </div>
+          <button onClick={() => setShowAddModal(true)} className="bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 active:scale-95">
+            <Plus size={24} />
+          </button>
+        </header>
+
+        {loadingData ? (
+          <div className="flex justify-center py-20"><Loader className="animate-spin text-red-300" size={40} /></div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMemories.map(m => (
+              <div key={m.id} className="relative group">
+                <MemoryCard memory={m} onClick={() => setSelectedItem(m)} />
+                <button 
+                  onClick={(e) => deleteMemory(e, m.id)}
+                  className="absolute top-2 right-2 p-2 bg-white/80 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+
+      {selectedItem && <DetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />}
+      {showAddModal && <AddModal activeTab={activeTab} onClose={() => setShowAddModal(false)} onSave={addNewMemory} />}
+    </div>
+  );
+}
+
+function MemoryCard({ memory, onClick }) {
+  const baseClass = "bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden border border-slate-100 h-72 flex flex-col animate-fade-in";
+  
+  if (memory.type === 'photo') {
+    return (
+      <div onClick={onClick} className={baseClass}>
+        <div className="relative flex-1">
+          <img src={memory.url} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute bottom-3 left-4 text-white">
+            <p className="font-bold">{memory.title}</p>
+            <p className="text-xs opacity-80">{memory.date}</p>
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  if (memory.type === 'letter') {
+    return (
+      <div onClick={onClick} className={`${baseClass} p-6 bg-red-50 border-red-100`}>
+        <FileText className="text-red-400 mb-4" size={24} />
+        <h3 className="font-serif text-xl font-bold text-red-900 mb-2">{memory.title}</h3>
+        <p className="font-serif text-red-800 line-clamp-4 leading-relaxed">{memory.content}</p>
+        <p className="mt-auto text-red-400 text-xs font-medium">{memory.date}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div onClick={onClick} className={`${baseClass} p-6 border-l-4 border-l-red-500`}>
+      <Calendar className="text-red-500 mb-4" size={24} />
+      <h3 className="font-bold text-slate-800 mb-2">{memory.title}</h3>
+      <p className="text-slate-500 text-sm line-clamp-4">{memory.content}</p>
+      <p className="mt-auto text-slate-400 text-xs">{memory.date}</p>
     </div>
+  );
+}
 
-    <script type="module">
-        // IMPORTANTE: No tocar estas importaciones para que la base de datos funcione
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+function DetailModal({ item, onClose }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative shadow-2xl" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-black/10 hover:bg-black/20 rounded-full z-10 transition-colors">
+          <X size={20} />
+        </button>
 
-        // Configuración técnica (se rellena automáticamente)
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        {item.type === 'photo' && (
+          <>
+            <img src={item.url} alt="" className="w-full h-auto object-contain max-h-[65vh] bg-slate-100" />
+            <div className="p-8">
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">{item.title}</h2>
+              <p className="text-red-500 text-sm mb-4 font-medium">{item.date}</p>
+              <p className="text-slate-600 leading-relaxed text-lg">{item.content}</p>
+            </div>
+          </>
+        )}
 
-        const loader = document.getElementById('loader');
-        const retryBtn = document.getElementById('retry-btn');
-        const loginScreen = document.getElementById('login-screen');
-        const mainApp = document.getElementById('main-app');
+        {item.type === 'letter' && (
+          <div className="p-8 md:p-12 bg-red-50 min-h-[50vh] flex flex-col items-center">
+            <div className="w-full max-w-lg">
+              <div className="text-center mb-10 border-b border-red-200 pb-6">
+                <p className="text-red-400 text-sm uppercase tracking-widest mb-2">{item.date}</p>
+                <h2 className="text-3xl font-serif font-bold text-red-900">{item.title}</h2>
+              </div>
+              <p className="font-serif text-xl text-red-900 leading-loose whitespace-pre-wrap">{item.content}</p>
+              <div className="mt-12 text-center text-red-300"><Heart fill="currentColor" className="inline" /></div>
+            </div>
+          </div>
+        )}
 
-        // Función de seguridad: Si la carga tarda más de 5 segundos, muestra el botón de reintento
-        setTimeout(() => { 
-            if(loader.style.display !== 'none') retryBtn.classList.remove('hidden'); 
-        }, 5000);
+        {item.type === 'moment' && (
+          <div className="p-8">
+             <div className="flex items-center gap-4 mb-8">
+                <div className="p-4 bg-red-100 text-red-600 rounded-2xl"><Calendar size={32} /></div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">{item.title}</h2>
+                  <p className="text-slate-400">{item.date}</p>
+                </div>
+             </div>
+             <p className="text-xl text-slate-600 leading-relaxed italic">"{item.content}"</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
-        // Control de autenticación
-        onAuthStateChanged(auth, (user) => {
-            console.log("Conectado con éxito");
-            // Quitamos el cargador suavemente
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 500);
-            
-            // Verificamos si ya inició sesión anteriormente en esta pestaña
-            if (sessionStorage.getItem('isLoggedIn') === 'true') {
-                showApp();
-            } else {
-                loginScreen.classList.remove('hidden');
-            }
-        });
+function AddModal({ activeTab, onClose, onSave }) {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [url, setUrl] = useState('');
+  const [saving, setSaving] = useState(false);
 
-        // Inicio de sesión anónimo (para la base de datos)
-        signInAnonymously(auth).catch(e => console.error("Error técnico de conexión", e));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    const type = activeTab === 'gallery' ? 'photo' : activeTab === 'letters' ? 'letter' : 'moment';
+    await onSave({ type, title, content, date, url });
+    setSaving(false);
+  };
 
-        // --- SECCIÓN DE CONTRASEÑAS ---
-        // Puedes añadir más palabras aquí separadas por comas
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const pass = document.getElementById('password-input').value.toLowerCase().trim();
-            const permitidas = ['invictos', 'invicitos', '16052025'];
-            
-            if (permitidas.includes(pass)) {
-                sessionStorage.setItem('isLoggedIn', 'true');
-                showApp();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        });
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
+        <h3 className="text-2xl font-bold text-slate-800 mb-6">Nuevo Recuerdo</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input required type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Título del recuerdo" className="w-full border-slate-200 border rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none" />
+          <input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full border-slate-200 border rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none" />
+          {activeTab === 'gallery' && (
+            <input required type="url" value={url} onChange={e => setUrl(e.target.value)} placeholder="Enlace de la foto (URL)" className="w-full border-slate-200 border rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none" />
+          )}
+          <textarea required value={content} onChange={e => setContent(e.target.value)} placeholder={activeTab === 'letters' ? "Escribe tu carta aquí..." : "Descripción..."} className="w-full border-slate-200 border rounded-xl p-3 h-32 focus:ring-2 focus:ring-red-400 outline-none" />
+          
+          <div className="flex gap-3 pt-4">
+            <button type="button" onClick={onClose} className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
+            <button type="submit" disabled={saving} className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg shadow-red-100 disabled:opacity-50">
+              {saving ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
-        // Mostrar la aplicación
-        function showApp() {
-            loginScreen.classList.add('hidden');
-            mainApp.classList.remove('hidden');
-            initDataSync();
-            startHeartRain();
-        }
+function NavBtn({ icon: Icon, active, onClick, label }) {
+  return (
+    <button onClick={onClick} className={`flex flex-col items-center p-2 rounded-xl transition-all ${active ? 'text-red-600 bg-red-50 shadow-inner' : 'text-slate-400'}`}>
+      <Icon size={24} className={active ? 'fill-current' : ''} />
+      <span className="text-[10px] font-bold mt-1">{label}</span>
+    </button>
+  );
+}
 
-        // Sincronización con la base de datos en tiempo real
-        function initDataSync() {
-            const memoriesRef = collection(db, 'artifacts', appId, 'public', 'data', 'memories');
-            onSnapshot(memoriesRef, (snapshot) => {
-                const data = [];
-                snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
-                // Ordenar por los más recientes primero
-                data.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                renderMemories(data);
-            }, (err) => {
-                console.error("Error al leer datos:", err);
-            });
-        }
-
-        // Dibujar los recuerdos en pantalla
-        function renderMemories(memories) {
-            const gallery = document.getElementById('gallery-container');
-            const letters = document.getElementById('letters-container');
-            const moments = document.getElementById('moments-container');
-            
-            gallery.innerHTML = ''; 
-            letters.innerHTML = ''; 
-            moments.innerHTML = '';
-
-            memories.forEach(m => {
-                if (m.type === 'photo') {
-                    gallery.innerHTML += `
-                        <div class="rounded-2xl overflow-hidden shadow-lg border-4 border-white fade-in">
-                            <img src="${m.content}" class="w-full aspect-square object-cover" onerror="this.src='https://placehold.co/400?text=Error+al+cargar+imagen'">
-                        </div>`;
-                } else if (m.type === 'letter') {
-                    letters.innerHTML += `
-                        <div class="bg-white p-8 rounded-3xl shadow-sm border border-red-50 letter-paper fade-in">
-                            <h3 class="font-bold text-red-800 mb-2">${m.title}</h3>
-                            <p class="italic text-slate-700 whitespace-pre-wrap">${m.content}</p>
-                            <div class="mt-4 text-[10px] text-red-300 uppercase tracking-widest">${m.date || ''}</div>
-                        </div>`;
-                } else if (m.type === 'moment') {
-                    moments.innerHTML += `
-                        <div class="relative fade-in">
-                            <div class="absolute -left-[41px] top-0 w-4 h-4 rounded-full bg-red-600 shadow-sm"></div>
-                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-red-50">
-                                <h4 class="font-bold text-slate-800">${m.title}</h4>
-                                <p class="text-slate-500">${m.content}</p>
-                            </div>
-                        </div>`;
-                }
-            });
-        }
-
-        // Guardar nuevo contenido
-        document.getElementById('add-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submit-btn');
-            btn.disabled = true;
-            btn.innerText = "Guardando...";
-
-            const newEntry = {
-                type: document.getElementById('new-type').value,
-                title: document.getElementById('new-title').value,
-                content: document.getElementById('new-content').value,
-                date: new Date().toLocaleDateString('es-ES'),
-                timestamp: Date.now()
-            };
-
-            try {
-                const memoriesRef = collection(db, 'artifacts', appId, 'public', 'data', 'memories');
-                await addDoc(memoriesRef, newEntry);
-                toggleModal();
-                document.getElementById('add-form').reset();
-            } catch (err) { 
-                alert("Hubo un error al guardar. Revisa tu conexión.");
-                console.error(err); 
-            } finally { 
-                btn.disabled = false;
-                btn.innerText = "Guardar";
-            }
-        });
-
-        // Cambiar entre pestañas
-        window.switchTab = (tab) => {
-            // Ocultar todo
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            // Quitar estilos activos de botones
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('bg-red-50', 'text-red-600', 'font-bold');
-                b.classList.add('text-slate-600', 'font-semibold');
-            });
-
-            // Mostrar activa
-            document.getElementById('tab-' + tab).classList.remove('hidden');
-            const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-            if(activeBtn) {
-                activeBtn.classList.add('bg-red-50', 'text-red-600', 'font-bold');
-                activeBtn.classList.remove('text-slate-600', 'font-semibold');
-            }
-        };
-
-        // Abrir/Cerrar ventana de añadir
-        window.toggleModal = () => {
-            const m = document.getElementById('add-modal');
-            m.classList.toggle('hidden'); 
-            m.classList.toggle('flex');
-        };
-
-        // Lluvia de corazones infinita
-        function startHeartRain() {
-            setInterval(() => {
-                const heart = document.createElement('div');
-                heart.innerHTML = '❤️';
-                heart.className = 'heart-particle';
-                heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.fontSize = (Math.random() * 10 + 15) + 'px';
-                heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
-                heart.style.opacity = Math.random();
-                document.body.appendChild(heart);
-                setTimeout(() => heart.remove(), 7000);
-            }, 1500);
-        }
-    </script>
-</body>
-</html>
+function SidebarBtn({ icon: Icon, active, onClick, label }) {
+  return (
+    <button onClick={onClick} className={`flex items-center gap-3 w-full p-4 rounded-2xl transition-all ${active ? 'bg-red-600 text-white shadow-lg shadow-red-200 font-bold' : 'text-slate-500 hover:bg-red-50'}`}>
+      <Icon size={20} className={active ? 'fill-current' : ''} />
+      <span>{label}</span>
+    </button>
+  );
+}
