@@ -17,14 +17,18 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
         .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        
+        /* Ocultar scrollbar pero mantener funcionalidad */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-rose-50 text-slate-800 min-h-screen">
+<body class="bg-[#fff8f8] text-slate-800 min-h-screen">
 
     <!-- PANTALLA DE CARGA / LOGIN -->
-    <div id="login-screen" class="fixed inset-0 z-[100] bg-rose-50 flex items-center justify-center p-4">
+    <div id="login-screen" class="fixed inset-0 z-[100] bg-[#fff8f8] flex items-center justify-center p-4">
         <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center border border-rose-100 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-rose-600"></div>
             <div class="w-20 h-20 bg-rose-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
@@ -45,7 +49,7 @@
 
     <!-- APP PRINCIPAL -->
     <div id="main-app" class="hidden">
-        <!-- Navegación Lateral -->
+        <!-- Navegación Lateral (Escritorio) -->
         <aside class="hidden md:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-white border-r border-rose-100 p-8 z-40">
             <div class="flex items-center gap-3 mb-12 text-red-600">
                 <i data-lucide="heart" fill="currentColor"></i>
@@ -83,7 +87,7 @@
                     <h2 id="section-title" class="text-4xl font-black text-slate-800 tracking-tight">Cargando...</h2>
                     <p class="text-red-400 font-medium italic mt-1 font-romance text-xl">Para mi persona favorita.</p>
                 </div>
-                <button onclick="openAddModal()" class="bg-red-600 text-white p-5 rounded-2xl shadow-xl shadow-red-200 hover:bg-red-700 transition-all">
+                <button onclick="openAddModal()" class="bg-red-600 text-white p-5 rounded-2xl shadow-xl shadow-red-200 hover:bg-red-700 transition-all active:scale-90">
                     <i data-lucide="plus" stroke-width="3"></i>
                 </button>
             </header>
@@ -92,18 +96,18 @@
         </main>
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL PARA AÑADIR -->
     <div id="add-modal" class="hidden fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-[2.5rem] max-w-md w-full p-10 shadow-2xl relative">
+        <div class="bg-white rounded-[2.5rem] max-w-md w-full p-10 shadow-2xl relative animate-fade">
             <h3 class="text-2xl font-bold mb-6 text-slate-800 font-romance text-3xl">Nuevo Recuerdo</h3>
             <form id="add-form" class="space-y-4">
-                <input id="in-title" required placeholder="Título" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
-                <input id="in-date" type="date" required class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
-                <input id="in-url" placeholder="URL de la foto" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
-                <textarea id="in-content" required placeholder="Tu mensaje..." class="w-full bg-slate-50 p-4 rounded-2xl h-32 resize-none outline-none"></textarea>
-                <div class="flex gap-4">
-                    <button type="button" onclick="closeAddModal()" class="flex-1 py-4 text-slate-400 font-bold">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-red-600 text-white font-bold py-4 rounded-2xl">Guardar</button>
+                <input id="in-title" required placeholder="Título del recuerdo" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border-2 border-transparent focus:border-rose-100 transition-all">
+                <input id="in-date" type="date" required class="w-full bg-slate-50 p-4 rounded-2xl outline-none border-2 border-transparent focus:border-rose-100 transition-all">
+                <input id="in-url" placeholder="Pega aquí el enlace de tu foto" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border-2 border-transparent focus:border-rose-100 transition-all">
+                <textarea id="in-content" required placeholder="Escribe lo que sientes..." class="w-full bg-slate-50 p-4 rounded-2xl h-32 resize-none outline-none border-2 border-transparent focus:border-rose-100 transition-all"></textarea>
+                <div class="flex gap-4 pt-2">
+                    <button type="button" onclick="closeAddModal()" class="flex-1 py-4 text-slate-400 font-bold hover:text-slate-600 transition-colors">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-red-600 text-white font-bold py-4 rounded-2xl hover:bg-red-700 shadow-lg shadow-red-100">Guardar</button>
                 </div>
             </form>
         </div>
@@ -113,7 +117,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // CONFIGURACIÓN EXTRAÍDA DE TU IMAGEN
+        // CONFIGURACIÓN DE TU FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDjZL-biMikywR0Z64UjLMYL0voGHOhbfQ",
             authDomain: "nuestro-espacio-1605.firebaseapp.com",
@@ -130,6 +134,7 @@
         let currentTab = 'photo';
         let memories = [];
 
+        // Lógica de Acceso
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const pass = document.getElementById('password-input').value.toLowerCase().trim();
@@ -139,69 +144,137 @@
                 initApp();
             } else {
                 document.getElementById('error-msg').classList.remove('hidden');
+                document.getElementById('password-input').classList.add('border-red-200');
             }
         });
 
-        window.setTab = (tab) => { currentTab = tab; render(); };
+        window.setTab = (tab) => { 
+            currentTab = tab; 
+            render(); 
+        };
+
         window.openAddModal = () => {
             document.getElementById('add-modal').classList.remove('hidden');
-            document.getElementById('in-url').classList.toggle('hidden', currentTab !== 'photo');
+            // Si no estamos en fotos, no pedimos URL
+            document.getElementById('in-url').style.display = currentTab === 'photo' ? 'block' : 'none';
             document.getElementById('in-date').valueAsDate = new Date();
         };
-        window.closeAddModal = () => { document.getElementById('add-modal').classList.add('hidden'); document.getElementById('add-form').reset(); };
+
+        window.closeAddModal = () => { 
+            document.getElementById('add-modal').classList.add('hidden'); 
+            document.getElementById('add-form').reset(); 
+        };
 
         function initApp() {
+            // Escuchar cambios en tiempo real
             const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'memories'));
             onSnapshot(q, (snapshot) => {
                 memories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                // Ordenar por fecha (más nuevos primero)
                 memories.sort((a, b) => new Date(b.date) - new Date(a.date));
                 render();
             }, (error) => {
-                console.error("Error de permisos. Revisa las REGLAS de Firestore:", error);
+                console.error("Error en Firebase:", error);
             });
         }
 
+        // Guardar nuevo recuerdo
         document.getElementById('add-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const newMem = {
-                type: currentTab,
-                title: document.getElementById('in-title').value,
-                date: document.getElementById('in-date').value,
-                url: document.getElementById('in-url').value || '',
-                content: document.getElementById('in-content').value
-            };
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), newMem);
-            closeAddModal();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerText = "Guardando...";
+
+            try {
+                const newMem = {
+                    type: currentTab,
+                    title: document.getElementById('in-title').value,
+                    date: document.getElementById('in-date').value,
+                    url: document.getElementById('in-url').value || '',
+                    content: document.getElementById('in-content').value,
+                    createdAt: new Date().toISOString()
+                };
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), newMem);
+                closeAddModal();
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Guardar";
+            }
         });
 
         window.deleteItem = async (id) => {
-            if(confirm('¿Borrar?')) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
+            if(confirm('¿Seguro que quieres borrar este recuerdo?')) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
+            }
         };
 
         function render() {
             const container = document.getElementById('grid-container');
             const titleEl = document.getElementById('section-title');
             container.innerHTML = '';
+            
             const titles = { photo: 'Nuestras Fotos', letter: 'Cartas del Corazón', moment: 'Nuestro Diario' };
             titleEl.innerText = titles[currentTab];
 
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                const active = btn.id.includes(currentTab);
-                btn.className = `nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${active ? 'bg-red-600 text-white' : 'text-slate-400'}`;
-            });
+            // Actualizar botones de navegación
+            const updateNav = (idPrefix) => {
+                ['photo', 'letter', 'moment'].forEach(tab => {
+                    const btn = document.getElementById(`${idPrefix}${tab}`);
+                    if (!btn) return;
+                    const active = tab === currentTab;
+                    if (idPrefix === 'btn-') { // Desktop
+                        btn.className = `nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${active ? 'bg-red-600 text-white shadow-lg shadow-red-100' : 'text-slate-400 hover:bg-rose-50'}`;
+                    } else { // Mobile
+                        btn.className = `flex flex-col items-center gap-1 transition-all ${active ? 'text-red-600 scale-110' : 'text-slate-400'}`;
+                    }
+                });
+            };
+            updateNav('btn-');
+            updateNav('m-btn-');
 
             const filtered = memories.filter(m => m.type === currentTab);
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-20 text-center text-slate-300 italic">Aún no hay recuerdos aquí... ¡Añade el primero! ✨</div>`;
+            }
+
             filtered.forEach(m => {
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-[2rem] shadow-sm overflow-hidden border border-rose-50 relative group h-80 flex flex-col animate-fade";
-                card.innerHTML = (m.type === 'photo' ? 
-                    `<img src="${m.url}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div><div class="absolute bottom-6 left-6 text-white"><p class="font-bold">${m.title}</p></div>` :
-                    `<div class="p-8 h-full flex flex-col"><h3 class="font-bold text-xl mb-2">${m.title}</h3><p class="text-slate-500 text-sm italic line-clamp-6">${m.content}</p></div>`) +
-                    `<button onclick="deleteItem('${m.id}')" class="absolute top-4 right-4 p-2 bg-white/90 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" size="16"></i></button>`;
+                card.className = "bg-white rounded-[2.5rem] shadow-sm overflow-hidden border border-rose-50 relative group h-80 flex flex-col animate-fade";
+                
+                if (m.type === 'photo') {
+                    card.innerHTML = `
+                        <img src="${m.url}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        <div class="absolute bottom-6 left-6 right-6 text-white">
+                            <p class="text-xs opacity-70 mb-1">${new Date(m.date).toLocaleDateString('es-ES', {year:'numeric', month:'long', day:'numeric'})}</p>
+                            <p class="font-bold text-lg leading-tight">${m.title}</p>
+                        </div>`;
+                } else {
+                    card.innerHTML = `
+                        <div class="p-8 h-full flex flex-col">
+                            <div class="flex justify-between items-start mb-4">
+                                <span class="text-[10px] font-bold text-red-400 uppercase tracking-widest bg-red-50 px-2 py-1 rounded-lg">${new Date(m.date).toLocaleDateString()}</span>
+                            </div>
+                            <h3 class="font-bold text-xl mb-3 text-slate-800 leading-tight">${m.title}</h3>
+                            <p class="text-slate-500 text-sm italic line-clamp-6 leading-relaxed flex-1">${m.content}</p>
+                        </div>`;
+                }
+
+                // Botón de borrar
+                card.innerHTML += `
+                    <button onclick="deleteItem('${m.id}')" class="absolute top-4 right-4 p-2 bg-white/90 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white shadow-sm">
+                        <i data-lucide="trash-2" size="16"></i>
+                    </button>`;
+                
                 container.appendChild(card);
             });
             lucide.createIcons();
         }
+
+        // Inicializar iconos al cargar
         lucide.createIcons();
     </script>
 </body>
