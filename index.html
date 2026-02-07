@@ -1,391 +1,233 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, Image as ImageIcon, FileText, Video, Lock, LogIn, Calendar, X, Plus, Music, Loader, Trash2 } from 'lucide-react';
-
-// Importar Firebase
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, doc } from 'firebase/firestore';
-
-// --- CONFIGURACIÓN DE FIREBASE ACTUALIZADA ---
-const firebaseConfig = {
-  apiKey: "AIzaSyDjZL-biMIkywR0Z64UjLMYL0voGHOhbfQ",
-  authDomain: "nuestro-espacio-1605.firebaseapp.com",
-  projectId: "nuestro-espacio-1605",
-  storageBucket: "nuestro-espacio-1605.firebasestorage.app",
-  messagingSenderId: "838302204888",
-  appId: "1:838302204888:web:e17d8a1251bcb2d8cf28ad",
-  measurementId: "G-MET7EL0S9X"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'nuestro-espacio-1605';
-
-// Componente principal
-export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); 
-  const [firebaseUser, setFirebaseUser] = useState(null); 
-  const [loading, setLoading] = useState(true);
-
-  // Autenticación técnica con Firebase
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E & J | Nuestro Espacio</title>
+    <!-- Cargamos Tailwind para el diseño y Lucide para los iconos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-romance { font-family: 'Dancing Script', cursive; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-      } catch (error) {
-        console.error("Error de autenticación:", error);
-      }
-    };
-    
-    initAuth();
-    
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setFirebaseUser(u);
-      setLoading(false);
-    });
-    
-    return () => unsubscribe();
-  }, []);
+        .animate-fade { animation: fadeIn 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-rose-50 text-slate-800 min-h-screen">
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-red-50 flex items-center justify-center text-red-400">
-        <Loader className="animate-spin" size={32} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-red-50 font-sans text-slate-800">
-      {isLoggedIn && firebaseUser ? (
-        <MainApp logout={() => setIsLoggedIn(false)} />
-      ) : (
-        <LoginScreen onLogin={() => setIsLoggedIn(true)} />
-      )}
-    </div>
-  );
-}
-
-// --- Pantalla de Login ---
-function LoginScreen({ onLogin }) {
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    const validPasswords = ["invictos", "16052025"];
-    
-    if (validPasswords.includes(password.toLowerCase().trim())) {
-      onLogin();
-    } else {
-      setError("Esa no es nuestra palabra mágica... Inténtalo de nuevo.");
-    }
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-br from-red-100 to-orange-50">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-red-100 relative overflow-hidden animate-fade-in">
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-red-700"></div>
-        
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 text-red-500 rounded-full mb-4 animate-pulse">
-            <Heart fill="currentColor" size={32} />
-          </div>
-          <h1 className="text-3xl font-bold text-slate-800">Evelyn y Juan</h1>
-          <p className="text-slate-500 mt-2 italic">Nuestro rincón secreto</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Introduce la palabra clave</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock size={18} className="text-slate-400" />
-              </div>
-              <input
-                type="password"
-                autoFocus
-                className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-300 focus:border-red-300 transition-colors bg-slate-50"
-                placeholder="Nuestra palabra clave..."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-screen" class="fixed inset-0 z-[100] bg-rose-50 flex items-center justify-center p-4">
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center border border-rose-100 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-400 to-rose-600"></div>
+            <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <i data-lucide="heart" fill="currentColor" size="40" class="animate-pulse"></i>
             </div>
-          </div>
-
-          {error && <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">{error}</p>}
-
-          <button
-            type="submit"
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-all transform hover:scale-[1.02] shadow-md shadow-red-200"
-          >
-            Entrar a nuestro mundo
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// --- Aplicación Principal ---
-function MainApp({ logout }) {
-  const [activeTab, setActiveTab] = useState('gallery');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [memories, setMemories] = useState([]);
-  const [loadingData, setLoadingData] = useState(true);
-
-  useEffect(() => {
-    if (!auth.currentUser) return;
-    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'memories'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      docs.sort((a, b) => new Date(b.date) - new Date(a.date));
-      setMemories(docs);
-      setLoadingData(false);
-    }, (error) => {
-      console.error("Firestore Error:", error);
-      setLoadingData(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const addNewMemory = async (newMemory) => {
-    if (!auth.currentUser) return;
-    const { id, ...memoryData } = newMemory;
-    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), {
-      ...memoryData,
-      createdAt: new Date().toISOString()
-    });
-    setShowAddModal(false);
-  };
-
-  const deleteMemory = async (e, id) => {
-    e.stopPropagation();
-    if (!auth.currentUser) return;
-    if (window.confirm("¿Quieres borrar este recuerdo para siempre?")) {
-      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
-    }
-  };
-
-  const filteredMemories = memories.filter(m => {
-    if (activeTab === 'gallery') return m.type === 'photo';
-    if (activeTab === 'letters') return m.type === 'letter';
-    if (activeTab === 'moments') return m.type === 'moment';
-    return true;
-  });
-
-  return (
-    <div className="pb-20 md:pb-0 md:pl-64 min-h-screen">
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-red-100 flex justify-around p-3 z-50 shadow-lg">
-        <NavBtn icon={ImageIcon} active={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} label="Fotos" />
-        <NavBtn icon={FileText} active={activeTab === 'letters'} onClick={() => setActiveTab('letters')} label="Cartas" />
-        <NavBtn icon={Calendar} active={activeTab === 'moments'} onClick={() => setActiveTab('moments')} label="Momentos" />
-      </div>
-
-      <div className="hidden md:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-white border-r border-red-100 p-6 z-40">
-        <div className="flex items-center gap-2 mb-8 text-red-600">
-          <Heart fill="currentColor" size={24} />
-          <span className="font-bold text-xl tracking-tight">Evelyn y Juan</span>
+            <h1 class="text-3xl font-bold text-slate-800 mb-2 font-romance text-4xl">Evelyn y Juan</h1>
+            <p class="text-slate-400 mb-8 italic">Introduce nuestra clave mágica</p>
+            <form id="login-form" class="space-y-4">
+                <input type="password" id="password-input" placeholder="¿Nuestra fecha o palabra?" 
+                    class="w-full bg-slate-50 p-5 rounded-2xl border-2 border-transparent focus:border-rose-200 outline-none transition-all text-center text-lg">
+                <p id="error-msg" class="text-rose-500 text-sm font-bold hidden">Palabra incorrecta, mi amor.</p>
+                <button type="submit" class="w-full bg-rose-500 text-white font-bold py-5 rounded-2xl hover:bg-rose-600 shadow-xl shadow-rose-100 transition-all active:scale-95">
+                    Entrar a nuestro mundo
+                </button>
+            </form>
         </div>
-        
-        <nav className="flex-1 space-y-2">
-          <SidebarBtn icon={ImageIcon} active={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} label="Nuestras Fotos" />
-          <SidebarBtn icon={FileText} active={activeTab === 'letters'} onClick={() => setActiveTab('letters')} label="Cartas de Amor" />
-          <SidebarBtn icon={Calendar} active={activeTab === 'moments'} onClick={() => setActiveTab('moments')} label="Momentos" />
+    </div>
+
+    <!-- APP PRINCIPAL (Oculta por defecto) -->
+    <div id="main-app" class="hidden">
+        <!-- Sidebar (Escritorio) -->
+        <aside class="hidden md:flex flex-col w-64 fixed left-0 top-0 bottom-0 bg-white border-r border-rose-100 p-8 z-40">
+            <div class="flex items-center gap-3 mb-12 text-rose-500">
+                <i data-lucide="heart" fill="currentColor"></i>
+                <span class="font-bold text-xl font-romance text-2xl">E & J</span>
+            </div>
+            <nav class="flex-1 space-y-4">
+                <button onclick="setTab('photo')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all" id="btn-photo">
+                    <i data-lucide="image"></i> <span>Galería</span>
+                </button>
+                <button onclick="setTab('letter')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all" id="btn-letter">
+                    <i data-lucide="file-text"></i> <span>Cartas</span>
+                </button>
+                <button onclick="setTab('moment')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all" id="btn-moment">
+                    <i data-lucide="calendar"></i> <span>Diario</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Navegación Inferior (Móvil) -->
+        <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-rose-100 flex justify-around p-4 z-50 rounded-t-3xl shadow-2xl">
+            <button onclick="setTab('photo')" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-300" id="m-btn-photo">
+                <i data-lucide="image"></i> <span class="text-[10px] font-bold">FOTOS</span>
+            </button>
+            <button onclick="setTab('letter')" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-300" id="m-btn-letter">
+                <i data-lucide="file-text"></i> <span class="text-[10px] font-bold">CARTAS</span>
+            </button>
+            <button onclick="setTab('moment')" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-300" id="m-btn-moment">
+                <i data-lucide="calendar"></i> <span class="text-[10px] font-bold">DIARIO</span>
+            </button>
         </nav>
 
-        <button onClick={logout} className="mt-auto flex items-center gap-2 text-slate-400 hover:text-red-500 transition-colors text-sm">
-          <LogIn size={16} className="rotate-180" /> Cerrar Sesión
-        </button>
-      </div>
-
-      <main className="p-4 md:p-8 max-w-5xl mx-auto">
-        <header className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-slate-800">
-              {activeTab === 'gallery' && 'Nuestras Fotos'}
-              {activeTab === 'letters' && 'Cartas para Ti'}
-              {activeTab === 'moments' && 'Momentos Especiales'}
-            </h2>
-            <p className="text-slate-500 mt-1 italic">Bienvenido a nuestro espacio, Mi amor</p>
-          </div>
-          <button onClick={() => setShowAddModal(true)} className="bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 active:scale-95">
-            <Plus size={24} />
-          </button>
-        </header>
-
-        {loadingData ? (
-          <div className="flex justify-center py-20"><Loader className="animate-spin text-red-300" size={40} /></div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMemories.map(m => (
-              <div key={m.id} className="relative group">
-                <MemoryCard memory={m} onClick={() => setSelectedItem(m)} />
-                <button 
-                  onClick={(e) => deleteMemory(e, m.id)}
-                  className="absolute top-2 right-2 p-2 bg-white/80 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {selectedItem && <DetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />}
-      {showAddModal && <AddModal activeTab={activeTab} onClose={() => setShowAddModal(false)} onSave={addNewMemory} />}
-    </div>
-  );
-}
-
-function MemoryCard({ memory, onClick }) {
-  const baseClass = "bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden border border-slate-100 h-72 flex flex-col animate-fade-in";
-  
-  if (memory.type === 'photo') {
-    return (
-      <div onClick={onClick} className={baseClass}>
-        <div className="relative flex-1">
-          <img src={memory.url} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-          <div className="absolute bottom-3 left-4 text-white">
-            <p className="font-bold">{memory.title}</p>
-            <p className="text-xs opacity-80">{memory.date}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (memory.type === 'letter') {
-    return (
-      <div onClick={onClick} className={`${baseClass} p-6 bg-red-50 border-red-100`}>
-        <FileText className="text-red-400 mb-4" size={24} />
-        <h3 className="font-serif text-xl font-bold text-red-900 mb-2">{memory.title}</h3>
-        <p className="font-serif text-red-800 line-clamp-4 leading-relaxed">{memory.content}</p>
-        <p className="mt-auto text-red-400 text-xs font-medium">{memory.date}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div onClick={onClick} className={`${baseClass} p-6 border-l-4 border-l-red-500`}>
-      <Calendar className="text-red-500 mb-4" size={24} />
-      <h3 className="font-bold text-slate-800 mb-2">{memory.title}</h3>
-      <p className="text-slate-500 text-sm line-clamp-4">{memory.content}</p>
-      <p className="mt-auto text-slate-400 text-xs">{memory.date}</p>
-    </div>
-  );
-}
-
-function DetailModal({ item, onClose }) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative shadow-2xl" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-black/10 hover:bg-black/20 rounded-full z-10 transition-colors">
-          <X size={20} />
-        </button>
-
-        {item.type === 'photo' && (
-          <>
-            <img src={item.url} alt="" className="w-full h-auto object-contain max-h-[65vh] bg-slate-100" />
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">{item.title}</h2>
-              <p className="text-red-500 text-sm mb-4 font-medium">{item.date}</p>
-              <p className="text-slate-600 leading-relaxed text-lg">{item.content}</p>
-            </div>
-          </>
-        )}
-
-        {item.type === 'letter' && (
-          <div className="p-8 md:p-12 bg-red-50 min-h-[50vh] flex flex-col items-center">
-            <div className="w-full max-w-lg">
-              <div className="text-center mb-10 border-b border-red-200 pb-6">
-                <p className="text-red-400 text-sm uppercase tracking-widest mb-2">{item.date}</p>
-                <h2 className="text-3xl font-serif font-bold text-red-900">{item.title}</h2>
-              </div>
-              <p className="font-serif text-xl text-red-900 leading-loose whitespace-pre-wrap">{item.content}</p>
-              <div className="mt-12 text-center text-red-300"><Heart fill="currentColor" className="inline" /></div>
-            </div>
-          </div>
-        )}
-
-        {item.type === 'moment' && (
-          <div className="p-8">
-             <div className="flex items-center gap-4 mb-8">
-                <div className="p-4 bg-red-100 text-red-600 rounded-2xl"><Calendar size={32} /></div>
+        <!-- Contenido Principal -->
+        <main class="p-6 md:p-12 md:pl-72 max-w-6xl mx-auto pb-24">
+            <header class="flex justify-between items-center mb-12">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-800">{item.title}</h2>
-                  <p className="text-slate-400">{item.date}</p>
+                    <h2 id="section-title" class="text-4xl font-black text-slate-800 tracking-tight">Cargando...</h2>
+                    <p class="text-rose-400 font-medium italic mt-1 font-romance text-xl">Para Evelyn, de Juan.</p>
                 </div>
-             </div>
-             <p className="text-xl text-slate-600 leading-relaxed italic">"{item.content}"</p>
-          </div>
-        )}
-      </div>
+                <button onclick="openAddModal()" class="bg-rose-500 text-white p-5 rounded-2xl shadow-xl shadow-rose-200 hover:bg-rose-600 transition-all hover:scale-110 active:scale-95">
+                    <i data-lucide="plus" stroke-width="3"></i>
+                </button>
+            </header>
+
+            <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Los recuerdos aparecerán aquí -->
+            </div>
+        </main>
     </div>
-  );
-}
 
-function AddModal({ activeTab, onClose, onSave }) {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [url, setUrl] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    const type = activeTab === 'gallery' ? 'photo' : activeTab === 'letters' ? 'letter' : 'moment';
-    await onSave({ type, title, content, date, url });
-    setSaving(false);
-  };
-
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
-        <h3 className="text-2xl font-bold text-slate-800 mb-6">Nuevo Recuerdo</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input required type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Título del recuerdo" className="w-full border-slate-200 border rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none" />
-          <input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full border-slate-200 border rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none" />
-          {activeTab === 'gallery' && (
-            <input required type="url" value={url} onChange={e => setUrl(e.target.value)} placeholder="Enlace de la foto (URL)" className="w-full border-slate-200 border rounded-xl p-3 focus:ring-2 focus:ring-red-400 outline-none" />
-          )}
-          <textarea required value={content} onChange={e => setContent(e.target.value)} placeholder={activeTab === 'letters' ? "Escribe tu carta aquí..." : "Descripción..."} className="w-full border-slate-200 border rounded-xl p-3 h-32 focus:ring-2 focus:ring-red-400 outline-none" />
-          
-          <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
-            <button type="submit" disabled={saving} className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg shadow-red-100 disabled:opacity-50">
-              {saving ? 'Guardando...' : 'Guardar'}
-            </button>
-          </div>
-        </form>
-      </div>
+    <!-- MODAL PARA AÑADIR -->
+    <div id="add-modal" class="hidden fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] max-w-md w-full p-10 shadow-2xl relative">
+            <h3 class="text-2xl font-bold mb-6 text-slate-800">Nuevo Recuerdo</h3>
+            <form id="add-form" class="space-y-4">
+                <input id="in-title" required placeholder="Título" class="w-full bg-slate-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-rose-200">
+                <input id="in-date" type="date" required class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
+                <input id="in-url" placeholder="URL de la imagen (solo para fotos)" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
+                <textarea id="in-content" required placeholder="Escribe aquí..." class="w-full bg-slate-50 p-4 rounded-2xl h-32 resize-none outline-none"></textarea>
+                <div class="flex gap-4">
+                    <button type="button" onclick="closeAddModal()" class="flex-1 py-4 text-slate-400 font-bold">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-rose-500 text-white font-bold py-4 rounded-2xl shadow-lg">Guardar</button>
+                </div>
+            </form>
+        </div>
     </div>
-  );
-}
 
-function NavBtn({ icon: Icon, active, onClick, label }) {
-  return (
-    <button onClick={onClick} className={`flex flex-col items-center p-2 rounded-xl transition-all ${active ? 'text-red-600 bg-red-50 shadow-inner' : 'text-slate-400'}`}>
-      <Icon size={24} className={active ? 'fill-current' : ''} />
-      <span className="text-[10px] font-bold mt-1">{label}</span>
-    </button>
-  );
-}
+    <script>
+        let currentTab = 'photo';
+        let memories = JSON.parse(localStorage.getItem('nuestros_recuerdos_v1')) || [
+            { id: 1, type: 'photo', title: 'Nuestro Inicio', date: '2024-05-16', url: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=800', content: 'El primer día de nuestra aventura.' }
+        ];
 
-function SidebarBtn({ icon: Icon, active, onClick, label }) {
-  return (
-    <button onClick={onClick} className={`flex items-center gap-3 w-full p-4 rounded-2xl transition-all ${active ? 'bg-red-600 text-white shadow-lg shadow-red-200 font-bold' : 'text-slate-500 hover:bg-red-50'}`}>
-      <Icon size={20} className={active ? 'fill-current' : ''} />
-      <span>{label}</span>
-    </button>
-  );
-}
+        // Login Logic
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pass = document.getElementById('password-input').value.toLowerCase().trim();
+            if (['invictos', '16052025'].includes(pass)) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                render();
+            } else {
+                document.getElementById('error-msg').classList.remove('hidden');
+            }
+        });
+
+        function setTab(tab) {
+            currentTab = tab;
+            render();
+        }
+
+        function openAddModal() {
+            document.getElementById('add-modal').classList.remove('hidden');
+            document.getElementById('in-url').style.display = currentTab === 'photo' ? 'block' : 'none';
+            document.getElementById('in-date').valueAsDate = new Date();
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+            document.getElementById('add-form').reset();
+        }
+
+        document.getElementById('add-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newMem = {
+                id: Date.now(),
+                type: currentTab,
+                title: document.getElementById('in-title').value,
+                date: document.getElementById('in-date').value,
+                url: document.getElementById('in-url').value,
+                content: document.getElementById('in-content').value
+            };
+            memories.unshift(newMem);
+            localStorage.setItem('nuestros_recuerdos_v1', JSON.stringify(memories));
+            closeAddModal();
+            render();
+        });
+
+        function deleteItem(id) {
+            if(confirm('¿Borrar este recuerdo?')) {
+                memories = memories.filter(m => m.id !== id);
+                localStorage.setItem('nuestros_recuerdos_v1', JSON.stringify(memories));
+                render();
+            }
+        }
+
+        function render() {
+            const container = document.getElementById('grid-container');
+            const titleEl = document.getElementById('section-title');
+            container.innerHTML = '';
+
+            const titles = { photo: 'Nuestras Fotos', letter: 'Cartas del Corazón', moment: 'Nuestro Diario' };
+            titleEl.innerText = titles[currentTab];
+
+            // Update buttons state
+            document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(b => {
+                const isActive = b.id.includes(currentTab);
+                if(b.classList.contains('nav-btn')) {
+                    b.className = `nav-btn w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${isActive ? 'bg-rose-500 text-white shadow-xl font-bold' : 'text-slate-400 hover:bg-rose-50'}`;
+                } else {
+                    b.className = `mobile-nav-btn flex flex-col items-center gap-1 ${isActive ? 'text-rose-500 scale-110' : 'text-slate-300'}`;
+                }
+            });
+
+            const filtered = memories.filter(m => m.type === currentTab);
+            
+            if(filtered.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center py-20 text-slate-400 italic">No hay nada aquí todavía...</p>`;
+            }
+
+            filtered.forEach(m => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-[2rem] shadow-sm hover:shadow-xl transition-all overflow-hidden border border-rose-50 relative animate-fade group h-80";
+                
+                let inner = '';
+                if(m.type === 'photo') {
+                    inner = `
+                        <img src="${m.url}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                        <div class="absolute bottom-6 left-6 text-white">
+                            <p class="font-bold text-lg">${m.title}</p>
+                            <p class="text-[10px] opacity-70 uppercase tracking-widest">${m.date}</p>
+                        </div>
+                    `;
+                } else {
+                    inner = `
+                        <div class="p-8 h-full flex flex-col">
+                            <h3 class="font-bold text-xl mb-2 ${m.type === 'letter' ? 'font-romance text-2xl text-rose-800' : ''}">${m.title}</h3>
+                            <p class="text-slate-500 text-sm italic line-clamp-5">"${m.content}"</p>
+                            <p class="mt-auto text-[10px] font-bold text-rose-300 uppercase">${m.date}</p>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = inner + `
+                    <button onclick="deleteItem(${m.id})" class="absolute top-4 right-4 p-2 bg-white/90 text-rose-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all shadow-md">
+                        <i data-lucide="trash-2" size="16"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        window.onload = () => lucide.createIcons();
+    </script>
+</body>
+</html>
