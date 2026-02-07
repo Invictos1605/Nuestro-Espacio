@@ -1,10 +1,4 @@
 <!-- Chosen Palette: Red Passion (bg-red-50, text-red-900, accents red-600) -->
-<!-- Application Structure Plan: 
-     1. Floating Music Player: Agregado un reproductor sutil para "su canción".
-     2. Heart Rain Animation: Efecto visual romántico de fondo.
-     3. Timeline Styling: Mejora visual en la sección de momentos.
-     4. Responsive Audio: Manejo de reproducción con interacción del usuario. -->
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -18,15 +12,11 @@
 
         body { font-family: 'Nunito', sans-serif; overflow-x: hidden; }
         
+        /* Estilo para los nombres y títulos románticos */
         .remachine-style { 
             font-family: 'Dancing Script', cursive;
             font-weight: 700;
-            letter-spacing: -0.5px;
-            filter: contrast(1.1);
         }
-
-        h1, h2 { font-family: 'Dancing Script', cursive; font-weight: 700; }
-        .serif-quote { font-family: 'Playfair Display', serif; }
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.9);
@@ -44,6 +34,7 @@
             background: linear-gradient(to bottom, rgba(254, 242, 242, 0) 0%, rgba(254, 242, 242, 1) 100%);
         }
 
+        /* Estilo de papel de carta para los mensajes */
         .letter-paper {
             background-color: #fff9f0;
             background-image: linear-gradient(#e5e5e5 1px, transparent 1px);
@@ -51,7 +42,7 @@
             line-height: 2rem;
         }
 
-        /* Corazones cayendo */
+        /* Animación de corazones cayendo */
         .heart-particle {
             position: fixed;
             top: -10%;
@@ -71,29 +62,21 @@
             background: white;
             z-index: 100;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             transition: opacity 0.5s;
-        }
-
-        /* Music Player Button */
-        .music-pulse {
-            animation: pulse-red 2s infinite;
-        }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
         }
     </style>
 </head>
 <body class="bg-red-50 text-slate-800 min-h-screen">
 
+    <!-- Pantalla de Carga Inicial -->
     <div id="loader" class="loading-overlay">
         <div class="text-center">
             <i class="fa-solid fa-heart text-red-600 text-5xl animate-pulse"></i>
-            <p class="mt-4 text-slate-400 font-bold tracking-widest uppercase text-xs">Conectando nuestro espacio...</p>
+            <p class="mt-4 text-slate-400 font-bold tracking-widest uppercase text-xs">Abriendo vuestro mundo...</p>
+            <button id="retry-btn" onclick="location.reload()" class="hidden mt-6 text-red-500 underline text-sm">¿Tarda demasiado? Haz clic aquí para refrescar</button>
         </div>
     </div>
 
@@ -111,7 +94,7 @@
                 <input type="password" id="password-input" 
                     class="w-full px-4 py-3 rounded-xl border border-red-200 focus:border-red-500 outline-none text-center text-lg" 
                     placeholder="Palabra clave..." autocomplete="off">
-                <div id="login-error" class="hidden text-red-500 text-sm font-bold">Palabra incorrecta, inténtalo de nuevo ❤️</div>
+                <div id="login-error" class="hidden text-red-500 text-sm font-bold">Esa no es nuestra clave... ❤️</div>
                 <button type="submit" 
                     class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl shadow-lg transition-transform transform hover:scale-105">
                     Entrar a nuestro mundo
@@ -120,19 +103,9 @@
         </div>
     </div>
 
-    <!-- REPRODUCTOR DE MÚSICA -->
-    <div id="music-player" class="fixed top-6 right-6 z-[70] hidden">
-        <button id="music-toggle" onclick="toggleMusic()" class="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-red-600 border border-red-100 transition-all hover:scale-110">
-            <i id="music-icon" class="fa-solid fa-music"></i>
-        </button>
-        <audio id="bg-music" loop>
-            <!-- Puedes cambiar este enlace por el de tu canción favorita -->
-            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-        </audio>
-    </div>
-
     <!-- APLICACIÓN PRINCIPAL -->
     <div id="main-app" class="hidden min-h-screen flex flex-col md:flex-row">
+        <!-- Navegación lateral -->
         <nav class="w-full md:w-64 bg-white shadow-xl z-40 flex flex-col fixed md:sticky top-0 h-16 md:h-screen">
             <div class="p-4 md:p-6 flex items-center justify-between md:flex-col md:items-start h-full">
                 <div class="flex items-center gap-2 text-red-600">
@@ -140,6 +113,7 @@
                     <span class="text-xl font-bold remachine-style">Invictos</span>
                 </div>
                 
+                <!-- Botones de navegación (PC) -->
                 <div class="hidden md:flex flex-col gap-2 mt-10 w-full">
                     <button onclick="switchTab('dashboard')" class="tab-btn w-full text-left p-3 rounded-xl bg-red-50 text-red-600 font-bold" data-tab="dashboard">
                         <i class="fa-solid fa-house mr-3"></i> Portada
@@ -155,6 +129,7 @@
                     </button>
                 </div>
                 
+                <!-- Botones de navegación (Móvil) -->
                 <div class="md:hidden flex gap-4">
                     <button onclick="switchTab('dashboard')" class="text-red-600 p-2"><i class="fa-solid fa-house"></i></button>
                     <button onclick="switchTab('gallery')" class="text-slate-400 p-2"><i class="fa-solid fa-camera"></i></button>
@@ -165,219 +140,187 @@
         </nav>
 
         <main class="flex-1 overflow-x-hidden relative z-10">
+            <!-- Pestaña: Portada -->
             <div id="tab-dashboard" class="tab-content fade-in min-h-screen flex flex-col">
-                <div class="relative w-full h-[55vh] md:h-[65vh] overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1518199266791-bd373152a558?q=80&w=2070&auto=format&fit=crop" 
-                         alt="Pareja abrazada al atardecer" 
-                         class="w-full h-full object-cover object-center">
+                <div class="relative w-full h-[55vh] overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1518199266791-bd373152a558?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover">
                     <div class="absolute inset-0 hero-gradient"></div>
                 </div>
-
                 <div class="max-w-4xl mx-auto px-6 py-12 text-center -mt-32 relative z-10">
-                    <div class="bg-white/90 backdrop-blur-md p-10 md:p-16 rounded-[3rem] shadow-2xl border border-red-100">
-                        <p class="serif-quote text-2xl md:text-3xl text-slate-700 leading-relaxed italic mb-10">
-                            "Cada kilómetro, cada noche sin ti, cada pantalla que nos separa, han sido solo pruebas. 
-                            Pruebas de que nuestro amor no solo ha superado la distancia sino además el tiempo. 
-                            Cada vez somos más fuertes, más seguros, más... <span class="text-red-600 font-bold not-italic remachine-style text-4xl md:text-5xl block mt-4">Invictos</span>."
+                    <div class="bg-white/90 backdrop-blur-md p-10 rounded-[3rem] shadow-2xl border border-red-100">
+                        <p class="serif-quote text-2xl text-slate-700 italic mb-10">
+                            "Cada kilómetro, cada noche sin ti... somos <span class="text-red-600 font-bold remachine-style text-4xl block mt-4">Invictos</span>."
                         </p>
-                        <div class="mt-14">
-                            <p class="remachine-style text-5xl text-red-700 mb-2">Evelyn</p>
-                            <div class="w-16 h-1 bg-red-600 mx-auto mb-2 opacity-50"></div>
-                            <p class="text-slate-400 text-sm font-bold tracking-[0.3em] uppercase">16-05-2025</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4 md:gap-6 mt-16">
-                        <div class="p-4 md:p-6 bg-white/60 rounded-3xl shadow-sm border border-white">
-                            <p class="text-2xl md:text-3xl font-bold text-red-600" id="stat-photos">0</p>
-                            <p class="text-[10px] md:text-[11px] text-slate-500 uppercase font-black tracking-widest mt-1">Fotos</p>
-                        </div>
-                        <div class="p-4 md:p-6 bg-white/60 rounded-3xl shadow-sm border border-white">
-                            <p class="text-2xl md:text-3xl font-bold text-red-600" id="stat-letters">0</p>
-                            <p class="text-[10px] md:text-[11px] text-slate-500 uppercase font-black tracking-widest mt-1">Cartas</p>
-                        </div>
-                        <div class="p-4 md:p-6 bg-white/60 rounded-3xl shadow-sm border border-white">
-                            <p class="text-2xl md:text-3xl font-bold text-red-600" id="stat-moments">0</p>
-                            <p class="text-[10px] md:text-[11px] text-slate-500 uppercase font-black tracking-widest mt-1">Días</p>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div id="tab-gallery" class="tab-content hidden fade-in p-6 md:p-10">
-                <h2 class="text-4xl font-bold text-red-900 mb-10 remachine-style">Nuestras fotos favoritas</h2>
-                <div id="gallery-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+            <!-- Pestaña: Galería -->
+            <div id="tab-gallery" class="tab-content hidden fade-in p-6">
+                <h2 class="text-4xl font-bold text-red-900 mb-10 remachine-style">Nuestras fotos</h2>
+                <div id="gallery-container" class="grid grid-cols-2 md:grid-cols-3 gap-6"></div>
             </div>
 
-            <div id="tab-letters" class="tab-content hidden fade-in p-6 md:p-10">
+            <!-- Pestaña: Cartas -->
+            <div id="tab-letters" class="tab-content hidden fade-in p-6">
                 <h2 class="text-4xl font-bold text-red-900 mb-10 remachine-style">Mis cartas para ti</h2>
                 <div id="letters-container" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
             </div>
 
-            <div id="tab-moments" class="tab-content hidden fade-in p-6 md:p-10">
+            <!-- Pestaña: Momentos -->
+            <div id="tab-moments" class="tab-content hidden fade-in p-6">
                 <h2 class="text-4xl font-bold text-red-900 mb-10 remachine-style">Nuestra línea del tiempo</h2>
-                <div class="relative max-w-3xl mx-auto pl-8 border-l-2 border-red-200 space-y-12" id="moments-container">
-                    <!-- Los momentos se inyectan aquí con un punto en la línea -->
-                </div>
+                <div id="moments-container" class="relative max-w-3xl mx-auto pl-8 border-l-2 border-red-200 space-y-12"></div>
             </div>
         </main>
 
-        <button onclick="toggleModal()" class="fixed bottom-8 right-8 w-16 h-16 bg-red-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl hover:scale-110 transition-transform z-50">
+        <!-- Botón flotante para añadir contenido -->
+        <button onclick="toggleModal()" class="fixed bottom-8 right-8 w-16 h-16 bg-red-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-50 hover:scale-110 transition-transform">
             <i class="fa-solid fa-plus"></i>
         </button>
     </div>
 
-    <!-- MODAL AÑADIR -->
+    <!-- MODAL PARA AÑADIR CONTENIDO -->
     <div id="add-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
         <div class="bg-white rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl">
-            <h3 class="text-2xl font-bold text-slate-800 mb-8 remachine-style">Nuevo Recuerdo</h3>
+            <h3 class="text-2xl font-bold mb-8 remachine-style">Nuevo Recuerdo</h3>
             <form id="add-form" class="space-y-5">
-                <select id="new-type" class="w-full p-4 border rounded-2xl outline-none bg-slate-50">
+                <select id="new-type" class="w-full p-4 border rounded-2xl bg-slate-50 outline-none">
                     <option value="photo">Foto (URL)</option>
                     <option value="letter">Carta</option>
-                    <option value="moment">Momento especial</option>
+                    <option value="moment">Momento</option>
                 </select>
                 <input type="text" id="new-title" placeholder="Título" class="w-full p-4 border rounded-2xl outline-none" required>
-                <textarea id="new-content" placeholder="Contenido o URL de imagen" class="w-full p-4 border rounded-2xl outline-none h-32" required></textarea>
+                <textarea id="new-content" placeholder="Escribe aquí o pega la URL de la imagen..." class="w-full p-4 border rounded-2xl outline-none h-32" required></textarea>
                 <div class="flex gap-4 pt-4">
-                    <button type="button" onclick="toggleModal()" class="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition-colors">Cancelar</button>
-                    <button id="submit-btn" type="submit" class="flex-1 py-4 bg-red-600 text-white font-bold rounded-2xl shadow-lg hover:bg-red-700 transition-colors">Guardar</button>
+                    <button type="button" onclick="toggleModal()" class="flex-1 py-4 text-slate-500 font-bold">Cancelar</button>
+                    <button id="submit-btn" type="submit" class="flex-1 py-4 bg-red-600 text-white font-bold rounded-2xl shadow-lg">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script type="module">
+        // IMPORTANTE: No tocar estas importaciones para que la base de datos funcione
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Configuración técnica (se rellena automáticamente)
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'invictos-app';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         const loader = document.getElementById('loader');
+        const retryBtn = document.getElementById('retry-btn');
         const loginScreen = document.getElementById('login-screen');
         const mainApp = document.getElementById('main-app');
-        const loginForm = document.getElementById('login-form');
-        const addForm = document.getElementById('add-form');
-        const musicPlayer = document.getElementById('music-player');
 
-        let currentUser = null;
-        let unsubscribeMemories = null;
+        // Función de seguridad: Si la carga tarda más de 5 segundos, muestra el botón de reintento
+        setTimeout(() => { 
+            if(loader.style.display !== 'none') retryBtn.classList.remove('hidden'); 
+        }, 5000);
 
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (error) {
-                console.error("Auth error:", error);
-            }
-        };
-
+        // Control de autenticación
         onAuthStateChanged(auth, (user) => {
-            currentUser = user;
+            console.log("Conectado con éxito");
+            // Quitamos el cargador suavemente
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
             
-            if (sessionStorage.getItem('isLoggedIn') === 'true' && user) {
+            // Verificamos si ya inició sesión anteriormente en esta pestaña
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
                 showApp();
             } else {
                 loginScreen.classList.remove('hidden');
             }
         });
 
-        initAuth();
+        // Inicio de sesión anónimo (para la base de datos)
+        signInAnonymously(auth).catch(e => console.error("Error técnico de conexión", e));
 
-        loginForm.addEventListener('submit', (e) => {
+        // --- SECCIÓN DE CONTRASEÑAS ---
+        // Puedes añadir más palabras aquí separadas por comas
+        document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const val = document.getElementById('password-input').value.toLowerCase().trim();
-            if (val === 'invictos' || val === '16052025') {
+            const pass = document.getElementById('password-input').value.toLowerCase().trim();
+            const permitidas = ['invictos', 'invicitos', '16052025'];
+            
+            if (permitidas.includes(pass)) {
                 sessionStorage.setItem('isLoggedIn', 'true');
-                if (currentUser) showApp();
+                showApp();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
         });
 
+        // Mostrar la aplicación
         function showApp() {
             loginScreen.classList.add('hidden');
             mainApp.classList.remove('hidden');
-            musicPlayer.classList.remove('hidden');
             initDataSync();
-            updateDays();
             startHeartRain();
         }
 
+        // Sincronización con la base de datos en tiempo real
         function initDataSync() {
-            if (!currentUser) return;
-            if (unsubscribeMemories) unsubscribeMemories();
             const memoriesRef = collection(db, 'artifacts', appId, 'public', 'data', 'memories');
-            unsubscribeMemories = onSnapshot(memoriesRef, (snapshot) => {
+            onSnapshot(memoriesRef, (snapshot) => {
                 const data = [];
                 snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
+                // Ordenar por los más recientes primero
+                data.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 renderMemories(data);
-            }, (error) => {
-                console.error("Firestore error:", error);
+            }, (err) => {
+                console.error("Error al leer datos:", err);
             });
         }
 
+        // Dibujar los recuerdos en pantalla
         function renderMemories(memories) {
             const gallery = document.getElementById('gallery-container');
             const letters = document.getElementById('letters-container');
             const moments = document.getElementById('moments-container');
-            gallery.innerHTML = ''; letters.innerHTML = ''; moments.innerHTML = '';
-            let pCount = 0, lCount = 0;
-
-            memories.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            
+            gallery.innerHTML = ''; 
+            letters.innerHTML = ''; 
+            moments.innerHTML = '';
 
             memories.forEach(m => {
                 if (m.type === 'photo') {
-                    pCount++;
                     gallery.innerHTML += `
-                        <div class="group relative aspect-square rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl transition-all bg-white border-4 border-white fade-in">
-                            <img src="${m.content}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://via.placeholder.com/400?text=Foto+No+Disponible'">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                                <p class="text-white font-bold text-sm">${m.title}</p>
-                            </div>
+                        <div class="rounded-2xl overflow-hidden shadow-lg border-4 border-white fade-in">
+                            <img src="${m.content}" class="w-full aspect-square object-cover" onerror="this.src='https://placehold.co/400?text=Error+al+cargar+imagen'">
                         </div>`;
                 } else if (m.type === 'letter') {
-                    lCount++;
                     letters.innerHTML += `
-                        <div class="bg-white p-10 rounded-[2.5rem] shadow-md border border-red-50 letter-paper relative overflow-hidden fade-in">
-                            <h3 class="font-bold text-red-800 text-2xl mb-4 remachine-style">${m.title}</h3>
-                            <p class="text-slate-700 italic text-lg leading-relaxed">"${m.content}"</p>
-                            <p class="text-right text-xs font-black text-red-300 mt-8 tracking-widest uppercase">${m.date}</p>
+                        <div class="bg-white p-8 rounded-3xl shadow-sm border border-red-50 letter-paper fade-in">
+                            <h3 class="font-bold text-red-800 mb-2">${m.title}</h3>
+                            <p class="italic text-slate-700 whitespace-pre-wrap">${m.content}</p>
+                            <div class="mt-4 text-[10px] text-red-300 uppercase tracking-widest">${m.date || ''}</div>
                         </div>`;
                 } else if (m.type === 'moment') {
                     moments.innerHTML += `
                         <div class="relative fade-in">
-                            <div class="absolute -left-[41px] top-0 w-4 h-4 rounded-full bg-red-600 border-4 border-red-50"></div>
-                            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-red-50 hover:shadow-md transition-shadow">
-                                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-red-300 mb-2 block">${m.date}</span>
-                                <h4 class="font-bold text-slate-800 text-2xl mb-2 remachine-style">${m.title}</h4>
-                                <p class="text-slate-500 leading-relaxed">${m.content}</p>
+                            <div class="absolute -left-[41px] top-0 w-4 h-4 rounded-full bg-red-600 shadow-sm"></div>
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-red-50">
+                                <h4 class="font-bold text-slate-800">${m.title}</h4>
+                                <p class="text-slate-500">${m.content}</p>
                             </div>
                         </div>`;
                 }
             });
-
-            document.getElementById('stat-photos').innerText = pCount;
-            document.getElementById('stat-letters').innerText = lCount;
         }
 
-        addForm.addEventListener('submit', async (e) => {
+        // Guardar nuevo contenido
+        document.getElementById('add-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!currentUser) return;
             const btn = document.getElementById('submit-btn');
             btn.disabled = true;
-            btn.innerText = 'Guardando...';
+            btn.innerText = "Guardando...";
+
             const newEntry = {
                 type: document.getElementById('new-type').value,
                 title: document.getElementById('new-title').value,
@@ -385,91 +328,61 @@
                 date: new Date().toLocaleDateString('es-ES'),
                 timestamp: Date.now()
             };
+
             try {
                 const memoriesRef = collection(db, 'artifacts', appId, 'public', 'data', 'memories');
                 await addDoc(memoriesRef, newEntry);
                 toggleModal();
-                addForm.reset();
-            } catch (err) {
-                console.error("Error saving doc:", err);
-            } finally {
+                document.getElementById('add-form').reset();
+            } catch (err) { 
+                alert("Hubo un error al guardar. Revisa tu conexión.");
+                console.error(err); 
+            } finally { 
                 btn.disabled = false;
-                btn.innerText = 'Guardar';
+                btn.innerText = "Guardar";
             }
         });
 
-        function updateDays() {
-            const start = new Date(2025, 4, 16); 
-            const now = new Date();
-            const diffTime = now - start;
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            const target = diffDays > 0 ? diffDays : 0;
-            
-            let count = 0;
-            const statElement = document.getElementById('stat-moments');
-            if (target > 0) {
-                const interval = setInterval(() => {
-                    count += Math.ceil(target / 15);
-                    if (count >= target) {
-                        statElement.innerText = target;
-                        clearInterval(interval);
-                    } else {
-                        statElement.innerText = count;
-                    }
-                }, 50);
-            } else {
-                statElement.innerText = "0";
-            }
-        }
+        // Cambiar entre pestañas
+        window.switchTab = (tab) => {
+            // Ocultar todo
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            // Quitar estilos activos de botones
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('bg-red-50', 'text-red-600', 'font-bold');
+                b.classList.add('text-slate-600', 'font-semibold');
+            });
 
-        // Función para los corazones
+            // Mostrar activa
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+            if(activeBtn) {
+                activeBtn.classList.add('bg-red-50', 'text-red-600', 'font-bold');
+                activeBtn.classList.remove('text-slate-600', 'font-semibold');
+            }
+        };
+
+        // Abrir/Cerrar ventana de añadir
+        window.toggleModal = () => {
+            const m = document.getElementById('add-modal');
+            m.classList.toggle('hidden'); 
+            m.classList.toggle('flex');
+        };
+
+        // Lluvia de corazones infinita
         function startHeartRain() {
             setInterval(() => {
                 const heart = document.createElement('div');
                 heart.innerHTML = '❤️';
                 heart.className = 'heart-particle';
                 heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
-                heart.style.opacity = Math.random() * 0.5 + 0.2;
+                heart.style.fontSize = (Math.random() * 10 + 15) + 'px';
                 heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
+                heart.style.opacity = Math.random();
                 document.body.appendChild(heart);
                 setTimeout(() => heart.remove(), 7000);
-            }, 800);
+            }, 1500);
         }
-
-        // Música
-        window.toggleMusic = () => {
-            const audio = document.getElementById('bg-music');
-            const icon = document.getElementById('music-icon');
-            const btn = document.getElementById('music-toggle');
-            
-            if (audio.paused) {
-                audio.play();
-                icon.className = 'fa-solid fa-pause';
-                btn.classList.add('music-pulse');
-            } else {
-                audio.pause();
-                icon.className = 'fa-solid fa-music';
-                btn.classList.remove('music-pulse');
-            }
-        };
-
-        window.switchTab = (tab) => {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById('tab-' + tab).classList.remove('hidden');
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('bg-red-50', 'text-red-600');
-                b.classList.add('text-slate-600');
-                if(b.dataset.tab === tab) b.classList.add('bg-red-50', 'text-red-600');
-            });
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        window.toggleModal = () => {
-            const m = document.getElementById('add-modal');
-            m.classList.toggle('hidden');
-            m.classList.toggle('flex');
-        };
     </script>
 </body>
 </html>
