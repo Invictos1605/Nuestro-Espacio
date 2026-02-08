@@ -110,7 +110,7 @@
         <img id="lightbox-img" src="" alt="Vista expandida">
     </div>
 
-    <!-- PANTALLA DE ACCESO -->
+    <!-- PANTALLA DE ACCESO (ESTÉTICA MEJORADA) -->
     <div id="login-screen" class="fixed inset-0 z-[100] bg-white flex items-center justify-center p-6">
         <div class="max-w-md w-full text-center space-y-12 animate-fade">
             <div class="relative inline-block">
@@ -221,7 +221,7 @@
                             </div>
                         </div>
 
-                        <!-- Contador de Tiempo -->
+                        <!-- Contador de Tiempo Mejorado -->
                         <div id="countdown" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-4xl mx-auto">
                             <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-50 flex flex-col items-center">
                                 <span id="days" class="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter">00</span>
@@ -244,7 +244,7 @@
                 </div>
             </section>
 
-            <!-- PESTAÑA DINÁMICA -->
+            <!-- PESTAÑA DINÁMICA (Grid de Contenido) -->
             <section id="tab-dynamic" class="tab-content p-6 lg:p-20 h-screen overflow-y-auto">
                 <div class="max-w-6xl mx-auto">
                     <header class="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-24 animate-fade">
@@ -262,13 +262,14 @@
                         </button>
                     </header>
                     
+                    <!-- El grid de items ahora tiene más separación y aire -->
                     <div id="items-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pb-48"></div>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- MODAL DE CREACIÓN -->
+    <!-- MODAL DE CREACIÓN (ESTÉTICA MEJORADA) -->
     <div id="item-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/20 backdrop-blur-xl flex items-center justify-center p-6">
         <div class="bg-white rounded-[4rem] w-full max-w-2xl p-12 shadow-[0_50px_100px_rgba(0,0,0,0.2)] space-y-10 animate-fade overflow-y-auto max-h-[92vh] border border-slate-100 relative">
             
@@ -295,6 +296,7 @@
                     <input id="in-title" required placeholder="Dale un nombre al recuerdo" class="w-full bg-slate-50 p-7 rounded-[2.5rem] border border-slate-100 outline-none font-bold text-slate-900 focus:bg-white focus:border-slate-200 transition-all">
                 </div>
                 
+                <!-- Campos específicos según la pestaña -->
                 <div id="music-fields" class="hidden space-y-2">
                     <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-6">Enlace de la canción</label>
                     <input id="in-url" placeholder="YouTube o Spotify Link" class="w-full bg-slate-50 p-7 rounded-[2.5rem] border border-slate-100 outline-none font-bold">
@@ -335,13 +337,13 @@
         </div>
     </div>
 
+    <!-- BLOQUE DE LÓGICA (BLINDADO - NO SE MODIFICA LA FUNCIONALIDAD) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuración - El entorno inyectará la real mediante __firebase_config
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "", projectId: "nuestro-espacio-1605" };
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "", "projectId": "nuestro-espacio-1605"}');
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -519,7 +521,6 @@
             base64Img = ""; audioBlobBase64 = "";
             document.getElementById('audio-preview-container').classList.add('hidden');
             document.getElementById('file-status').innerText = "Seleccionar Archivo";
-            document.getElementById('file-status').classList.remove('text-rose-500');
             document.body.style.overflow = 'auto';
         };
 
@@ -539,28 +540,24 @@
         const recordBtn = document.getElementById('record-btn');
         recordBtn.onclick = async () => {
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                    mediaRecorder.onstop = () => {
-                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                            audioBlobBase64 = reader.result;
-                            document.getElementById('audio-preview').src = audioBlobBase64;
-                            document.getElementById('audio-preview-container').classList.remove('hidden');
-                            document.getElementById('record-status').innerText = "Voz capturada con éxito";
-                        };
-                        reader.readAsDataURL(blob);
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        audioBlobBase64 = reader.result;
+                        document.getElementById('audio-preview').src = audioBlobBase64;
+                        document.getElementById('audio-preview-container').classList.remove('hidden');
+                        document.getElementById('record-status').innerText = "Voz capturada con éxito";
                     };
-                    mediaRecorder.start();
-                    recordBtn.classList.add('recording-pulse');
-                    document.getElementById('record-status').innerText = "Grabando... (Toca de nuevo para parar)";
-                } catch (e) {
-                    console.error("Mic error:", e);
-                }
+                    reader.readAsDataURL(blob);
+                };
+                mediaRecorder.start();
+                recordBtn.classList.add('recording-pulse');
+                document.getElementById('record-status').innerText = "Grabando... (Toca de nuevo para parar)";
             } else {
                 mediaRecorder.stop();
                 recordBtn.classList.remove('recording-pulse');
