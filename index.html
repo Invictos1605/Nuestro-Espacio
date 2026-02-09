@@ -172,7 +172,13 @@
     <div id="hearts-container" class="fixed inset-0 pointer-events-none z-0"></div>
 
     <div id="lightbox" onclick="closeLightbox()">
-        <img id="lightbox-img" src="" alt="Vista expandida">
+        <div class="w-full max-w-4xl p-6" onclick="event.stopPropagation()">
+            <img id="lightbox-img" src="" alt="Vista expandida" class="w-full rounded-xl">
+            <div id="lightbox-caption" class="mt-4 text-center text-white max-w-3xl mx-auto">
+                <h3 id="lightbox-title" class="text-lg font-bold text-white mb-2"></h3>
+                <p id="lightbox-desc" class="text-sm text-slate-200"></p>
+            </div>
+        </div>
     </div>
 
     <!-- PANTALLA DE LOGIN SIMPLE -->
@@ -430,6 +436,7 @@
                         <div id="upload-progress" class="h-3 bg-rose-500" style="width:0%"></div>
                     </div>
                     <div class="text-right text-xs text-slate-500 mt-2">Progreso: <span id="upload-progress-label"></span></div>
+                    <div class="text-right text-xs text-slate-500 mt-1">Archivo: <span id="upload-progress-file"></span></div>
                 </div>
 
                 <div class="flex gap-4 pt-4">
@@ -574,23 +581,61 @@
                 return;
             }
 
-            // Render compact square thumbnails (Instagram-like)
+            // Render compact square thumbnails (DOM-based to safely attach metadata)
             items.forEach(m => {
                 const card = document.createElement('div');
                 card.className = 'relative group overflow-hidden rounded-xl';
-                card.innerHTML = `
-                    <div class="w-full aspect-square bg-slate-100 overflow-hidden cursor-pointer" onclick="openLightbox('${m.image}')">
-                        <img src="${m.image}" alt="${m.title}" class="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110" loading="lazy">
-                    </div>
-                    <button onclick="event.stopPropagation(); deleteItemImmediate('${m.id}')" class="absolute top-2 right-2 w-8 h-8 bg-white/95 rounded-full flex items-center justify-center shadow hover:bg-white transition">
-                        <i data-lucide="trash-2" size="14" class="text-rose-500"></i>
-                    </button>
-                    <div class="absolute left-0 right-0 bottom-0 px-2 py-1 bg-black/30 text-white text-xs opacity-0 group-hover:opacity-100 transition">${m.title || ''}</div>
-                `;
+
+                const thumb = document.createElement('div');
+                thumb.className = 'w-full aspect-square bg-slate-100 overflow-hidden cursor-pointer';
+                thumb.dataset.img = m.image || '';
+                thumb.dataset.title = m.title || '';
+                thumb.dataset.desc = m.content || '';
+                thumb.addEventListener('click', function () { openLightboxFromEvent(this); });
+
+                const imgEl = document.createElement('img');
+                imgEl.src = m.image || '';
+                imgEl.alt = m.title || '';
+                imgEl.loading = 'lazy';
+                imgEl.className = 'w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110';
+                thumb.appendChild(imgEl);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'absolute top-2 right-2 w-8 h-8 bg-white/95 rounded-full flex items-center justify-center shadow hover:bg-white transition';
+                delBtn.onclick = (ev) => { ev.stopPropagation(); deleteItemImmediate(m.id); };
+                delBtn.innerHTML = '<i data-lucide="trash-2" size="14" class="text-rose-500"></i>';
+
+                const titleOverlay = document.createElement('div');
+                titleOverlay.className = 'absolute left-0 right-0 bottom-0 px-2 py-1 bg-black/30 text-white text-xs opacity-0 group-hover:opacity-100 transition';
+                titleOverlay.innerText = m.title || '';
+
+                card.appendChild(thumb);
+                card.appendChild(delBtn);
+                card.appendChild(titleOverlay);
                 grid.appendChild(card);
             });
             lucide.createIcons();
         }
+
+        // Open lightbox using an element with dataset (safe from escaping issues)
+        window.openLightboxFromEvent = (el) => {
+            const src = el.dataset.img || '';
+            const title = el.dataset.title || '';
+            const desc = el.dataset.desc || '';
+            openLightboxWithMeta(src, title, desc);
+        };
+
+        // Backwards-compatible openLightbox (keeps old calls working)
+        window.openLightbox = (src) => { openLightboxWithMeta(src, '', ''); };
+
+        window.openLightboxWithMeta = (src, title, desc) => {
+            const lb = document.getElementById('lightbox');
+            document.getElementById('lightbox-img').src = src || '';
+            document.getElementById('lightbox-title').innerText = title || '';
+            document.getElementById('lightbox-desc').innerText = desc || '';
+            lb.style.display = 'flex';
+            setTimeout(() => lb.style.opacity = '1', 10);
+        };
 
         function renderMusic(items) {
             const grid = document.getElementById('music-grid');
@@ -669,7 +714,7 @@
             submitBtn.disabled = true;
 
             // use Promise.race to reliably timeout long operations
-            const WORK_TIMEOUT = 20000; // 20s
+            const WORK_TIMEOUT = 120000; // 2 minutes (increase for uploads)
             let timeoutId = null;
 
             try {
@@ -681,6 +726,12 @@
                         // compress all selected File objects to Blobs
                         compressedArray = await Promise.all(selectedFiles.map(f => compressImage(f)));
                     }
+
+                    // show progress UI immediately
+                    const progWrap = document.getElementById('upload-progress-wrap');
+                    if (progWrap) progWrap.classList.remove('hidden');
+                    const progLabelEl = document.getElementById('upload-progress-label');
+                    if (progLabelEl) progLabelEl.innerText = '0%';
 
                     const title = document.getElementById('in-title').value;
                     const urlRaw = document.getElementById('in-url').value || "";
@@ -701,7 +752,12 @@
                         let accumulated = 0;
                         for (let i = 0; i < compressedArray.length; i++) {
                             const blob = compressedArray[i];
-                            const name = `memories/${appId}/${Date.now()}_${i}.jpg`;
+                            const origName = (selectedFiles && selectedFiles[i] && selectedFiles[i].name) ? selectedFiles[i].name : (`image_${i}.jpg`);
+                            const safeName = origName.replace(/[^a-zA-Z0-9._-]/g, '_');
+                            const name = `memories/${appId}/${Date.now()}_${safeName}`;
+                            // show current file name in progress UI
+                            const progressFileEl = document.getElementById('upload-progress-file');
+                            if (progressFileEl) progressFileEl.innerText = origName;
                             const sRef = storageRef(storage, name);
                             const uploadTask = uploadBytesResumable(sRef, blob, { contentType: 'image/jpeg' });
                             await new Promise((res, rej) => {
@@ -715,6 +771,7 @@
                                         progressEl.parentElement.classList.remove('hidden');
                                     }
                                 }, (error) => {
+                                    console.error('Upload error for blob', error);
                                     rej(error);
                                 }, async () => {
                                     try {
@@ -732,6 +789,9 @@
                             const data = { type: activeTab, title, url: "", content, created, image: url, audio: "" };
                             addPromises.push(addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data));
                         });
+                        // wait for doc creation to finish and then return uploadedUrls and metadata
+                        const createdResults = await Promise.all(addPromises);
+                        return { compressedArray, uploadedUrls, results: createdResults, title, content };
                     } else if (activeTab === 'music' && urls.length) {
                         urls.forEach(u => {
                             const data = { type: activeTab, title, url: u, content, created, image: "", audio: "" };
@@ -744,23 +804,25 @@
 
                     console.log('Save: uploading', addPromises.length, 'docs');
                     const results = await Promise.all(addPromises);
-                    return { compressedArray, results };
+                    return { compressedArray, uploadedUrls: [], results, title, content };
                 })();
 
                 const timeoutPromise = new Promise((_, reject) => {
                     timeoutId = setTimeout(() => reject(new Error('timeout')), WORK_TIMEOUT);
                 });
 
-                const { compressedArray, results } = await Promise.race([workPromise, timeoutPromise]);
+                const { compressedArray, results, uploadedUrls, title, content } = await Promise.race([workPromise, timeoutPromise]);
                 clearTimeout(timeoutId);
 
                 // If images were uploaded, show explicit success for upload
-                if (compressedArray && compressedArray.length && activeTab === 'gallery') {
+                if (activeTab === 'gallery') {
                     showToast('Carga exitosa', 'success');
-                    const imgSrc = compressedArray[0];
                     closeModal();
                     changeTab('gallery');
-                    setTimeout(() => openLightbox(imgSrc), 300);
+                    // open uploaded image in lightbox only if we have a download URL
+                    if (uploadedUrls && uploadedUrls.length) {
+                        setTimeout(() => openLightboxWithMeta(uploadedUrls[0], title || '', content || ''), 300);
+                    }
                 } else {
                     showToast('¡Recuerdo guardado! 💕', 'success');
                     closeModal();
@@ -823,6 +885,8 @@
             if (prog) prog.style.width = '0%';
             const progLabel = document.getElementById('upload-progress-label');
             if (progLabel) progLabel.innerText = '';
+            const progFile = document.getElementById('upload-progress-file');
+            if (progFile) progFile.innerText = '';
             document.body.style.overflow = 'auto';
         };
 
