@@ -800,11 +800,13 @@
 
             // Render compact square thumbnails (DOM-based to safely attach metadata)
             items.forEach(m => {
+                // Card: Relative for positioning, but NO overflow hidden (so menu can pop out)
                 const card = document.createElement('div');
-                card.className = 'relative group overflow-hidden rounded-xl';
+                card.className = 'relative group rounded-xl';
 
+                // Thumb: Handles the rounding and overflow for the image
                 const thumb = document.createElement('div');
-                thumb.className = 'w-full aspect-square bg-slate-100 overflow-hidden cursor-pointer';
+                thumb.className = 'w-full aspect-square bg-slate-100 overflow-hidden cursor-pointer rounded-xl';
                 thumb.dataset.img = m.image || '';
                 thumb.dataset.title = m.title || '';
                 thumb.dataset.desc = m.content || '';
@@ -817,17 +819,67 @@
                 imgEl.className = 'w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110';
                 thumb.appendChild(imgEl);
 
-                const delBtn = document.createElement('button');
-                delBtn.className = 'absolute top-2 right-2 w-8 h-8 bg-white/95 rounded-full flex items-center justify-center shadow hover:bg-white transition';
-                delBtn.onclick = (ev) => { ev.stopPropagation(); deleteItemImmediate(m.id); };
-                delBtn.innerHTML = '<i data-lucide="trash-2" size="14" class="text-rose-500"></i>';
+                // --- Menu Container ---
+                const menuContainer = document.createElement('div');
+                menuContainer.className = 'absolute top-2 right-2 z-30';
+
+                // --- 3-Dot Button ---
+                const moreBtn = document.createElement('button');
+                moreBtn.className = 'w-8 h-8 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm hover:bg-white transition text-slate-700';
+                moreBtn.innerHTML = '<i data-lucide="more-vertical" size="16" class="pointer-events-none"></i>';
+                moreBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    // Close all other open menus first
+                    document.querySelectorAll('.gallery-menu').forEach(el => {
+                        if (el !== menuDropdown) el.classList.add('hidden');
+                    });
+                    menuDropdown.classList.toggle('hidden');
+                };
+
+                // --- Dropdown Menu ---
+                const menuDropdown = document.createElement('div');
+                menuDropdown.className = 'gallery-menu hidden absolute right-0 mt-2 w-36 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden py-1 animate-fade z-40';
+
+                // Option 1: Download
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'w-full text-left px-4 py-3 text-[10px] uppercase font-bold tracking-wider text-slate-600 hover:bg-slate-50 flex items-center gap-2 group/item';
+                downloadBtn.innerHTML = '<i data-lucide="download" size="14" class="group-hover/item:text-blue-500 pointer-events-none"></i> Descargar';
+                downloadBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    const link = document.createElement('a');
+                    link.href = m.image;
+                    link.download = `Recuerdo-${m.title || 'Invictos'}.jpg`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    menuDropdown.classList.add('hidden');
+                };
+
+                // Option 2: Delete
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'w-full text-left px-4 py-3 text-[10px] uppercase font-bold tracking-wider text-slate-600 hover:bg-slate-50 flex items-center gap-2 group/item';
+                deleteBtn.innerHTML = '<i data-lucide="trash-2" size="14" class="group-hover/item:text-rose-500 pointer-events-none"></i> Eliminar';
+                deleteBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    // Using standard confirm
+                    if (confirm('¿Estás seguro que quieres eliminar?')) {
+                        deleteItemConfirmed(m.id);
+                    }
+                    menuDropdown.classList.add('hidden');
+                };
+
+                menuDropdown.appendChild(downloadBtn);
+                menuDropdown.appendChild(deleteBtn);
+                menuContainer.appendChild(moreBtn);
+                menuContainer.appendChild(menuDropdown);
 
                 const titleOverlay = document.createElement('div');
-                titleOverlay.className = 'absolute left-0 right-0 bottom-0 px-2 py-1 bg-black/30 text-white text-xs opacity-0 group-hover:opacity-100 transition';
+                titleOverlay.className = 'absolute left-0 right-0 bottom-0 px-2 py-1 bg-black/30 text-white text-xs opacity-0 group-hover:opacity-100 transition pointer-events-none rounded-b-xl';
                 titleOverlay.innerText = m.title || '';
 
                 card.appendChild(thumb);
-                card.appendChild(delBtn);
+                card.appendChild(menuContainer);
                 card.appendChild(titleOverlay);
                 grid.appendChild(card);
             });
@@ -1078,13 +1130,15 @@
             }
         };
 
-        // Eliminación directa desde los overlays (sin confirmación)
-        window.deleteItemImmediate = async (id) => {
+        // Eliminación con confirmación solicitada
+        window.deleteItemConfirmed = async (id) => {
+            console.log('Attempting delete for id:', id);
             try {
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memories', id));
                 showToast('Recuerdo eliminado', 'success');
             } catch (err) {
-                showToast('Error al eliminar', 'error');
+                console.error('Delete error:', err);
+                showToast('Error al eliminar: ' + err.message, 'error');
             }
         };
 
@@ -1272,6 +1326,15 @@
             if (e.key === 'Escape') {
                 const lb = document.getElementById('lightbox');
                 if (lb && lb.style.display === 'flex') closeLightbox();
+                // Close menus
+                document.querySelectorAll('.gallery-menu').forEach(el => el.classList.add('hidden'));
+            }
+        });
+
+        // Close dropdowns when clicking outside
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('button')) {
+                document.querySelectorAll('.gallery-menu').forEach(el => el.classList.add('hidden'));
             }
         });
 
