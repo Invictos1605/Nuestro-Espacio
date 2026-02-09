@@ -627,6 +627,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 
         // 🔧 Configuración proporcionada por el usuario
         const firebaseConfig = {
@@ -641,7 +642,17 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
         const appId = "oeihj";
+
+        // Iniciar autenticación anónima para permitir escrituras en Firestore
+        // (Muchas reglas de seguridad requieren estar autenticado)
+        signInAnonymously(auth).then(() => {
+            console.log("Conectado a la nube (Anónimo)");
+        }).catch((error) => {
+            console.error("Error de autenticación:", error);
+            showToast("Error de conexión a la nube", "error");
+        });
 
         let activeTab = 'home';
         let selectedFiles = [];
