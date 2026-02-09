@@ -652,7 +652,11 @@
             showToast("Conectado a la nube ☁️", "success");
         }).catch((error) => {
             console.error("Error de autenticación:", error);
-            showToast("Error de conexión: No se pudo iniciar sesión en la nube.", "error");
+            if (error.code === 'auth/operation-not-allowed' || error.message.includes('authorized domain')) {
+                showToast("Error: Dominio no autorizado. Revisa la guía de solución.", "error");
+            } else {
+                showToast("Error de conexión: No se pudo iniciar sesión en la nube.", "error");
+            }
         });
 
         let activeTab = 'home';
