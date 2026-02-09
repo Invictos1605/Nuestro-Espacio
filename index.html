@@ -690,7 +690,7 @@
             lucide.createIcons();
         }
 
-        async function compressImage(base64, maxWidth = 1200) {
+        async function compressImage(base64, maxWidth = 800) {
             // Accept a File (Blob) or a dataURL. Return a compressed data URL (image/jpeg)
             return new Promise((resolve, reject) => {
                 try {
@@ -717,7 +717,13 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         try {
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            // Validar tamaño aproximado (< 900KB para estar seguros)
+                            let quality = 0.6;
+                            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                            while (dataUrl.length > 900000 && quality > 0.1) {
+                                quality -= 0.1;
+                                dataUrl = canvas.toDataURL('image/jpeg', quality);
+                            }
                             if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
                             resolve(dataUrl);
                         } catch (err) {
@@ -967,6 +973,25 @@
                     }
 
                     console.log('Save: uploading', addPromises.length, 'docs');
+
+                    // Payload Safety Check
+                    // Firestore limit is ~1MB. We check estimating the size of the request.
+                    const payloadSize = JSON.stringify(addPromises).length; // rough estimate
+                    // If any single item is too big, the promise might contain a huge string.
+                    // Actually, we should check the data objects before creating promises or check the memory usage.
+                    // Better approach: check the 'data' objects created above.
+
+                    // Let's validate the data size constructed in the loop above
+                    // We can't easily access the closures variables 'data' inside addPromises array map.
+                    // So we must rely on the catch block error handling, BUT we can check the compressedArray/audioBlob
+
+                    if (audioBlobBase64 && audioBlobBase64.length > 950000) {
+                        throw new Error("AUDIO_TOO_LARGE");
+                    }
+                    if (compressedArray.some(img => img.length > 950000)) {
+                        throw new Error("IMAGE_TOO_LARGE");
+                    }
+
                     const results = await Promise.all(addPromises);
                     return { compressedArray, uploadedUrls: [], results, title, content };
                 })();
@@ -980,7 +1005,7 @@
 
                 // If images were uploaded, show explicit success for upload
                 if (activeTab === 'gallery') {
-                    showToast('Carga exitosa', 'success');
+                    showToast('¡Foto guardada en la nube! ☁️', 'success');
                     closeModal();
                     changeTab('gallery');
                     // open uploaded image in lightbox only if we have a download URL
@@ -988,15 +1013,17 @@
                         setTimeout(() => openLightboxWithMeta(uploadedUrls[0], title || '', content || ''), 300);
                     }
                 } else {
-                    showToast('¡Recuerdo guardado! 💕', 'success');
+                    showToast('¡Recuerdo guardado en la nube! ☁️', 'success');
                     closeModal();
                 }
             } catch (err) {
                 console.error('Save Error:', err);
                 if (err && err.message === 'timeout') {
-                    showToast('El guardado está tardando mucho. Tu internet puede estar lento.', 'error');
+                    showToast('El internet está lento. Intenta de nuevo.', 'error');
+                } else if (err && (err.message === 'AUDIO_TOO_LARGE' || err.message === 'IMAGE_TOO_LARGE')) {
+                    showToast('El archivo es muy grande para la nube.', 'error');
                 } else {
-                    showToast('Error al guardar. Verifica tu conexión a internet.', 'error');
+                    showToast('Error al guardar. Verifica tu conexión.', 'error');
                 }
             } finally {
                 if (timeoutId) clearTimeout(timeoutId);
