@@ -441,6 +441,18 @@
                             guardados con amor</p>
                     </div>
 
+                    <!-- Mobile Clocks (Visible only on small screens) -->
+                    <div class="lg:hidden grid grid-cols-2 gap-3 px-4 animate-fade">
+                        <div class="bg-slate-50 px-4 py-3 rounded-2xl text-center border border-slate-100 shadow-sm">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Lima</p>
+                            <p id="clock-lima-mobile" class="font-mono text-slate-900 font-black text-lg"></p>
+                        </div>
+                        <div class="bg-slate-50 px-4 py-3 rounded-2xl text-center border border-slate-100 shadow-sm">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Guanare</p>
+                            <p id="clock-guanare-mobile" class="font-mono text-slate-900 font-black text-lg"></p>
+                        </div>
+                    </div>
+
                     <div class="bg-white rounded-2xl p-8 sm:p-12 shadow-sm border border-slate-50">
                         <p class="text-center text-[10px] uppercase tracking-[0.5em] text-slate-400 font-black mb-6">
                             Tiempo Juntos</p>
@@ -1156,8 +1168,20 @@
             setInterval(() => {
                 const now = new Date();
                 const opt = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-                document.getElementById('clock-lima').innerText = now.toLocaleTimeString('en-US', { ...opt, timeZone: 'America/Lima' });
-                document.getElementById('clock-guanare').innerText = now.toLocaleTimeString('en-US', { ...opt, timeZone: 'America/Caracas' });
+                const limaTime = now.toLocaleTimeString('en-US', { ...opt, timeZone: 'America/Lima' });
+                const guanareTime = now.toLocaleTimeString('en-US', { ...opt, timeZone: 'America/Caracas' });
+
+                // Desktop Sidebar
+                const limaEl = document.getElementById('clock-lima');
+                if (limaEl) limaEl.innerText = limaTime;
+                const guanareEl = document.getElementById('clock-guanare');
+                if (guanareEl) guanareEl.innerText = guanareTime;
+
+                // Mobile View
+                const limaMob = document.getElementById('clock-lima-mobile');
+                if (limaMob) limaMob.innerText = limaTime;
+                const guanareMob = document.getElementById('clock-guanare-mobile');
+                if (guanareMob) guanareMob.innerText = guanareTime;
             }, 1000);
         }
 
