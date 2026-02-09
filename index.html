@@ -282,9 +282,14 @@
         <!-- Main Content Area -->
         <main class="flex-1 lg:ml-80 p-6 lg:p-12 pb-24 lg:pb-12">
             <div class="flex justify-end mb-6">
-                <button id="logout-btn" onclick="logoutToLogin()" aria-label="Cerrar sesión" title="Cerrar sesión" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 transition">
-                    <i data-lucide="log-out" size="18" class="text-blue-500"></i>
-                </button>
+                <div class="flex items-center gap-3">
+                    <button id="test-save-btn" onclick="testSaveImmediate()" aria-label="Probar guardado" title="Probar guardado" class="bg-rose-50 text-rose-600 px-4 py-2 rounded-full text-xs font-bold hover:bg-rose-100 transition">
+                        Probar Guardado
+                    </button>
+                    <button id="logout-btn" onclick="logoutToLogin()" aria-label="Cerrar sesión" title="Cerrar sesión" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 transition">
+                        <i data-lucide="log-out" size="18" class="text-blue-500"></i>
+                    </button>
+                </div>
             </div>
             
             <!-- TAB: HOME -->
@@ -455,7 +460,6 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-        import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
 
         // 🔧 Configuración proporcionada por el usuario
         const firebaseConfig = {
@@ -519,7 +523,7 @@
         }
 
         async function compressImage(base64, maxWidth = 1200) {
-            // Accept a File (Blob) or a dataURL. Return a compressed Blob (image/jpeg)
+            // Accept a File (Blob) or a dataURL. Return a compressed data URL (image/jpeg)
             return new Promise((resolve, reject) => {
                 try {
                     let img = new Image();
@@ -544,10 +548,14 @@
                         canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        canvas.toBlob((blob) => {
+                        try {
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                             if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
-                            resolve(blob);
-                        }, 'image/jpeg', 0.8);
+                            resolve(dataUrl);
+                        } catch (err) {
+                            if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
+                            reject(err);
+                        }
                     };
                     img.onerror = (e) => {
                         if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
@@ -633,6 +641,8 @@
             document.getElementById('lightbox-img').src = src || '';
             document.getElementById('lightbox-title').innerText = title || '';
             document.getElementById('lightbox-desc').innerText = desc || '';
+            // prevent background scroll while lightbox is open
+            document.body.style.overflow = 'hidden';
             lb.style.display = 'flex';
             setTimeout(() => lb.style.opacity = '1', 10);
         };
@@ -714,7 +724,7 @@
             submitBtn.disabled = true;
 
             // use Promise.race to reliably timeout long operations
-            const WORK_TIMEOUT = 120000; // 2 minutes (increase for uploads)
+                const WORK_TIMEOUT = 20000; // 20 seconds (restored)
             let timeoutId = null;
 
             try {
@@ -743,54 +753,24 @@
                     const addPromises = [];
 
                     if (activeTab === 'gallery' && compressedArray.length) {
-                        // Upload compressed blobs to Firebase Storage, get download URLs, then add Firestore docs
-                        // We'll perform uploads sequentially while reporting progress
-                        const storage = getStorage(app);
-                        let uploadedUrls = [];
-                        // compute total size for aggregated progress
-                        const totalSize = compressedArray.reduce((s, b) => s + (b.size || 0), 0) || 1;
-                        let accumulated = 0;
+                        // Reverted: save images as base64 data URLs directly into Firestore
+                        const uploadedUrls = [];
+                        const addPromisesLocal = [];
                         for (let i = 0; i < compressedArray.length; i++) {
-                            const blob = compressedArray[i];
-                            const origName = (selectedFiles && selectedFiles[i] && selectedFiles[i].name) ? selectedFiles[i].name : (`image_${i}.jpg`);
-                            const safeName = origName.replace(/[^a-zA-Z0-9._-]/g, '_');
-                            const name = `memories/${appId}/${Date.now()}_${safeName}`;
-                            // show current file name in progress UI
-                            const progressFileEl = document.getElementById('upload-progress-file');
-                            if (progressFileEl) progressFileEl.innerText = origName;
-                            const sRef = storageRef(storage, name);
-                            const uploadTask = uploadBytesResumable(sRef, blob, { contentType: 'image/jpeg' });
-                            await new Promise((res, rej) => {
-                                uploadTask.on('state_changed', (snapshot) => {
-                                    // snapshot.bytesTransferred is bytes for current upload
-                                    const percent = Math.min(100, Math.round(((accumulated + snapshot.bytesTransferred) / totalSize) * 100));
-                                    const progressEl = document.getElementById('upload-progress');
-                                    if (progressEl) {
-                                        progressEl.style.width = percent + '%';
-                                        document.getElementById('upload-progress-label').innerText = percent + '%';
-                                        progressEl.parentElement.classList.remove('hidden');
-                                    }
-                                }, (error) => {
-                                    console.error('Upload error for blob', error);
-                                    rej(error);
-                                }, async () => {
-                                    try {
-                                        const dl = await getDownloadURL(uploadTask.snapshot.ref);
-                                        uploadedUrls.push(dl);
-                                        // mark this blob as fully uploaded
-                                        accumulated += blob.size || 0;
-                                        res();
-                                    } catch (err) { rej(err); }
-                                });
-                            });
+                            const dataUrl = compressedArray[i];
+                            uploadedUrls.push(dataUrl);
+                            // update simple progress by item count
+                            const percent = Math.round(((i + 1) / compressedArray.length) * 100);
+                            const progressEl = document.getElementById('upload-progress');
+                            if (progressEl) {
+                                progressEl.style.width = percent + '%';
+                                document.getElementById('upload-progress-label').innerText = percent + '%';
+                                progressEl.parentElement.classList.remove('hidden');
+                            }
+                            const data = { type: activeTab, title, url: "", content, created, image: dataUrl, audio: "" };
+                            addPromisesLocal.push(addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data));
                         }
-                        // create docs for each uploaded URL
-                        uploadedUrls.forEach(url => {
-                            const data = { type: activeTab, title, url: "", content, created, image: url, audio: "" };
-                            addPromises.push(addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data));
-                        });
-                        // wait for doc creation to finish and then return uploadedUrls and metadata
-                        const createdResults = await Promise.all(addPromises);
+                        const createdResults = await Promise.all(addPromisesLocal);
                         return { compressedArray, uploadedUrls, results: createdResults, title, content };
                     } else if (activeTab === 'music' && urls.length) {
                         urls.forEach(u => {
@@ -982,12 +962,7 @@
             }, 1500);
         }
 
-        window.openLightbox = (src) => {
-            const lb = document.getElementById('lightbox');
-            document.getElementById('lightbox-img').src = src;
-            lb.style.display = 'flex';
-            setTimeout(() => lb.style.opacity = '1', 10);
-        };
+        // remove duplicate openLightbox implementation (kept openLightboxWithMeta above)
 
         window.logoutToLogin = () => {
             isLoggedIn = false;
@@ -998,11 +973,49 @@
             showToast('Sesión cerrada', 'success');
         };
 
+        window.testSaveImmediate = async () => {
+            if (!isLoggedIn) {
+                showToast('Inicia sesión primero', 'error');
+                return;
+            }
+            try {
+                const title = 'Prueba: guardado inmediato';
+                const content = 'Este es un documento de prueba generado para confirmar guardado.';
+                const created = new Date().toISOString();
+                const placeholder = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';
+                const data = { type: 'gallery', title, url: '', content, created, image: placeholder, audio: '' };
+                const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data);
+                showToast('Documento de prueba guardado', 'success');
+                changeTab('gallery');
+                setTimeout(() => openLightboxWithMeta(placeholder, title, content), 300);
+                console.log('Test save doc id:', docRef.id);
+            } catch (err) {
+                console.error('Test save error', err);
+                showToast('Error guardando documento de prueba', 'error');
+            }
+        };
+
         window.closeLightbox = () => {
             const lb = document.getElementById('lightbox');
             lb.style.opacity = '0';
-            setTimeout(() => lb.style.display = 'none', 400);
+            // restore scroll
+            document.body.style.overflow = 'auto';
+            setTimeout(() => {
+                lb.style.display = 'none';
+                // clear image src to free memory
+                try { document.getElementById('lightbox-img').src = ''; } catch (e) {}
+                // ensure gallery tab is visible
+                try { changeTab('gallery'); } catch (e) {}
+            }, 400);
         };
+
+        // close on Escape key as well
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const lb = document.getElementById('lightbox');
+                if (lb && lb.style.display === 'flex') closeLightbox();
+            }
+        });
 
         lucide.createIcons();
     </script>
