@@ -649,9 +649,10 @@
         // (Muchas reglas de seguridad requieren estar autenticado)
         signInAnonymously(auth).then(() => {
             console.log("Conectado a la nube (Anónimo)");
+            showToast("Conectado a la nube ☁️", "success");
         }).catch((error) => {
             console.error("Error de autenticación:", error);
-            showToast("Error de conexión a la nube", "error");
+            showToast("Error de conexión: No se pudo iniciar sesión en la nube.", "error");
         });
 
         let activeTab = 'home';
@@ -763,6 +764,13 @@
                 renderGallery(memories.gallery);
                 renderMusic(memories.music);
                 renderDiary(memories.diary);
+            }, (error) => {
+                console.error("Error obteniendo datos:", error);
+                if (error.code === 'permission-denied') {
+                    showToast("Error: No tienes permiso para ver los datos. Revisa la consola de Firebase.", "error");
+                } else {
+                    showToast("Error de conexión: " + error.message, "error");
+                }
             });
         }
 
