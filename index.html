@@ -702,6 +702,11 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
+        // Helper: Check if running locally (for CORS warnings)
+        function isLocalhost() {
+            return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        }
+
         // Login simple con múltiples contraseñas
         document.getElementById('login-form').onsubmit = (e) => {
             e.preventDefault();
@@ -1306,6 +1311,9 @@
         const deleteAudioBtn = document.getElementById('delete-audio-btn');
         const audioUploadInput = document.getElementById('audio-upload');
         let audioFile = null; // Store selected audio file
+        let audioBlobBase64 = ""; // Store recorded audio as base64
+        let audioChunks = [];
+        let mediaRecorder = null;
 
         // Handle Audio File Selection
         audioUploadInput.onchange = (e) => {
