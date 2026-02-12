@@ -584,10 +584,22 @@
                             class="w-16 h-16 bg-rose-500 hover:bg-rose-600 text-white rounded-full flex items-center justify-center transition-all shadow-lg">
                             <i data-lucide="mic" size="24"></i>
                         </button>
-                        <span id="record-status" class="text-sm text-slate-500 font-semibold"></span>
+                        <div class="flex flex-col gap-2">
+                            <span id="record-status" class="text-sm text-slate-500 font-semibold">Toca para grabar
+                                o...</span>
+                            <label
+                                class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2">
+                                <i data-lucide="upload" size="14"></i> Subir Audio
+                                <input type="file" id="audio-upload" accept="audio/*" class="hidden">
+                            </label>
+                        </div>
                     </div>
-                    <div id="audio-preview-container" class="hidden mt-4 bg-slate-50 p-4 rounded-2xl">
+                    <div id="audio-preview-container" class="hidden mt-4 bg-slate-50 p-4 rounded-2xl relative">
                         <audio id="audio-preview" controls class="w-full"></audio>
+                        <button type="button" id="delete-audio-btn"
+                            class="absolute -top-2 -right-2 bg-white text-rose-500 rounded-full p-2 shadow-md hover:bg-rose-50 transition">
+                            <i data-lucide="trash-2" size="16"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -640,6 +652,7 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
         import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
 
         // 🔧 Configuración proporcionada por el usuario
         const firebaseConfig = {
@@ -655,6 +668,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const storage = getStorage(app);
         const appId = "oeihj";
 
         // Iniciar autenticación anónima para permitir escrituras en Firestore
@@ -984,8 +998,7 @@
             loader.style.display = 'flex';
             submitBtn.disabled = true;
 
-            // use Promise.race to reliably timeout long operations
-            const WORK_TIMEOUT = 20000; // 20 seconds (restored)
+            const WORK_TIMEOUT = 60000; // Increased timeout for uploads
             let timeoutId = null;
 
             try {
@@ -1006,88 +1019,97 @@
                         });
                     }
 
-                    console.log('Save: starting compression/prep');
-                    // handle multiple images / multiple urls
-                    let compressedArray = [];
-                    if (selectedFiles && selectedFiles.length) {
-                        // compress all selected File objects to Blobs
-                        compressedArray = await Promise.all(selectedFiles.map(f => compressImage(f)));
-                    }
+                    console.log('Save: starting upload process');
 
-                    // show progress UI immediately
+                    // show progress UI
                     const progWrap = document.getElementById('upload-progress-wrap');
                     if (progWrap) progWrap.classList.remove('hidden');
+                    const progEl = document.getElementById('upload-progress');
                     const progLabelEl = document.getElementById('upload-progress-label');
                     if (progLabelEl) progLabelEl.innerText = '0%';
 
                     const title = document.getElementById('in-title').value;
                     const urlRaw = document.getElementById('in-url').value || "";
                     const urls = urlRaw.split(/\s*,\s*|\r?\n/).map(s => s.trim()).filter(Boolean);
-
                     const content = document.getElementById('in-desc').value;
                     const created = new Date().toISOString();
 
                     const addPromises = [];
 
-                    if (activeTab === 'gallery' && compressedArray.length) {
-                        // Reverted: save images as base64 data URLs directly into Firestore
+                    // HELPER: Upload file to Firebase Storage
+                    const uploadFileToStorage = async (file, pathName) => {
+                        const storageRef = ref(storage, pathName);
+                        await uploadBytes(storageRef, file);
+                        return await getDownloadURL(storageRef);
+                    };
+
+                    if (activeTab === 'gallery' && selectedFiles && selectedFiles.length) {
                         const uploadedUrls = [];
-                        const addPromisesLocal = [];
-                        for (let i = 0; i < compressedArray.length; i++) {
-                            const dataUrl = compressedArray[i];
-                            uploadedUrls.push(dataUrl);
-                            // update simple progress by item count
-                            const percent = Math.round(((i + 1) / compressedArray.length) * 100);
-                            const progressEl = document.getElementById('upload-progress');
-                            if (progressEl) {
-                                progressEl.style.width = percent + '%';
-                                document.getElementById('upload-progress-label').innerText = percent + '%';
-                                progressEl.parentElement.classList.remove('hidden');
-                            }
-                            const data = { type: activeTab, title, url: "", content, created, image: dataUrl, audio: "" };
-                            addPromisesLocal.push(addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data));
+                        for (let i = 0; i < selectedFiles.length; i++) {
+                            const file = selectedFiles[i];
+                            const ext = file.name.split('.').pop();
+                            const fileName = `gallery/${Date.now()}_${i}.${ext}`;
+
+                            // Update progress
+                            if (progLabelEl) progLabelEl.innerText = `Subiendo imagen ${i + 1}/${selectedFiles.length}...`;
+                            const downloadUrl = await uploadFileToStorage(file, fileName);
+                            uploadedUrls.push(downloadUrl);
+
+                            const data = { type: activeTab, title, url: "", content, created, image: downloadUrl, audio: "" };
+                            addPromises.push(addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data));
                         }
-                        const createdResults = await Promise.all(addPromisesLocal);
-                        return { compressedArray, uploadedUrls, results: createdResults, title, content };
+
+                        // Also support old compressedArray logic for backward compat if needed, but we prefer storage now
+                        const results = await Promise.all(addPromises);
+                        return { results, uploadedUrls, title, content };
+
                     } else if (activeTab === 'music' && urls.length) {
                         urls.forEach(u => {
                             const data = { type: activeTab, title, url: u, content, created, image: "", audio: "" };
                             addPromises.push(addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data));
                         });
                     } else {
-                        const data = { type: activeTab, title, url: urls[0] || "", content, created, image: compressedArray[0] || "", audio: audioBlobBase64 };
+                        // DIARY or default
+                        let audioUrl = "";
+                        let imageUrl = "";
+
+                        // Handle Audio Upload
+                        if (audioFile) {
+                            if (progLabelEl) progLabelEl.innerText = `Subiendo audio...`;
+                            const ext = audioFile.name.split('.').pop() || 'mp3';
+                            const fileName = `diary/audio_${Date.now()}.${ext}`;
+                            audioUrl = await uploadFileToStorage(audioFile, fileName);
+                        } else if (audioBlobBase64) {
+                            // Convert base64 back to blob for upload
+                            if (progLabelEl) progLabelEl.innerText = `Subiendo nota de voz...`;
+                            const fetchRes = await fetch(audioBlobBase64);
+                            const blob = await fetchRes.blob();
+                            const fileName = `diary/audio_${Date.now()}.webm`;
+                            audioUrl = await uploadFileToStorage(blob, fileName);
+                        }
+
+                        // Handle Image (if any)
+                        if (selectedFiles && selectedFiles.length) {
+                            if (progLabelEl) progLabelEl.innerText = `Subiendo imagen...`;
+                            const file = selectedFiles[0];
+                            const ext = file.name.split('.').pop();
+                            const fileName = `diary/image_${Date.now()}.${ext}`;
+                            imageUrl = await uploadFileToStorage(file, fileName);
+                        }
+
+                        const data = { type: activeTab, title, url: urls[0] || "", content, created, image: imageUrl, audio: audioUrl };
                         addPromises.push(addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data));
                     }
 
-                    console.log('Save: uploading', addPromises.length, 'docs');
-
-                    // Payload Safety Check
-                    // Firestore limit is ~1MB. We check estimating the size of the request.
-                    const payloadSize = JSON.stringify(addPromises).length; // rough estimate
-                    // If any single item is too big, the promise might contain a huge string.
-                    // Actually, we should check the data objects before creating promises or check the memory usage.
-                    // Better approach: check the 'data' objects created above.
-
-                    // Let's validate the data size constructed in the loop above
-                    // We can't easily access the closures variables 'data' inside addPromises array map.
-                    // So we must rely on the catch block error handling, BUT we can check the compressedArray/audioBlob
-
-                    if (audioBlobBase64 && audioBlobBase64.length > 950000) {
-                        throw new Error("AUDIO_TOO_LARGE");
-                    }
-                    if (compressedArray.some(img => img.length > 950000)) {
-                        throw new Error("IMAGE_TOO_LARGE");
-                    }
-
                     const results = await Promise.all(addPromises);
-                    return { compressedArray, uploadedUrls: [], results, title, content };
+                    return { results, uploadedUrls: [], title, content };
                 })();
 
                 const timeoutPromise = new Promise((_, reject) => {
                     timeoutId = setTimeout(() => reject(new Error('timeout')), WORK_TIMEOUT);
                 });
 
-                const { compressedArray, results, uploadedUrls, title, content } = await Promise.race([workPromise, timeoutPromise]);
+                const { results, uploadedUrls, title, content } = await Promise.race([workPromise, timeoutPromise]);
                 clearTimeout(timeoutId);
 
                 // If images were uploaded, show explicit success for upload
@@ -1095,7 +1117,6 @@
                     showToast('¡Foto guardada en la nube! ☁️', 'success');
                     closeModal();
                     changeTab('gallery');
-                    // open uploaded image in lightbox only if we have a download URL
                     if (uploadedUrls && uploadedUrls.length) {
                         setTimeout(() => openLightboxWithMeta(uploadedUrls[0], title || '', content || ''), 300);
                     }
@@ -1106,11 +1127,9 @@
             } catch (err) {
                 console.error('Save Error:', err);
                 if (err && err.message === 'timeout') {
-                    showToast('El internet está lento. Intenta de nuevo.', 'error');
-                } else if (err && (err.message === 'AUDIO_TOO_LARGE' || err.message === 'IMAGE_TOO_LARGE')) {
-                    showToast('El archivo es muy grande para la nube.', 'error');
+                    showToast('La subida está tardando demasiado. Verifica tu internet.', 'error');
                 } else {
-                    showToast('Error al guardar. Verifica tu conexión.', 'error');
+                    showToast('Error al guardar: ' + err.message, 'error');
                 }
             } finally {
                 if (timeoutId) clearTimeout(timeoutId);
@@ -1183,26 +1202,76 @@
         };
 
         const recordBtn = document.getElementById('record-btn');
-        recordBtn.onclick = async () => {
-            if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
+        const deleteAudioBtn = document.getElementById('delete-audio-btn');
+        const audioUploadInput = document.getElementById('audio-upload');
+        let audioFile = null; // Store selected audio file
+
+        // Handle Audio File Selection
+        audioUploadInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                audioFile = file;
+                const url = URL.createObjectURL(file);
+                document.getElementById('audio-preview').src = url;
+                document.getElementById('audio-preview-container').classList.remove('hidden');
+                document.getElementById('record-status').innerText = "Archivo de audio seleccionado";
+                // Reset recorder if active
                 audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        audioBlobBase64 = reader.result;
-                        document.getElementById('audio-preview').src = audioBlobBase64;
-                        document.getElementById('audio-preview-container').classList.remove('hidden');
-                        document.getElementById('record-status').innerText = "Voz capturada con éxito";
+                audioBlobBase64 = "";
+            }
+        };
+
+        // Handle Delete Draft Button
+        deleteAudioBtn.onclick = () => {
+            // Clear recorder data
+            audioChunks = [];
+            audioBlobBase64 = "";
+            // Clear file data
+            audioFile = null;
+            audioUploadInput.value = "";
+            // Reset UI
+            document.getElementById('audio-preview').src = "";
+            document.getElementById('audio-preview-container').classList.add('hidden');
+            document.getElementById('record-status').innerText = "Toca para grabar o...";
+
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                recordBtn.classList.remove('recording-pulse');
+            }
+        };
+
+        recordBtn.onclick = async () => {
+            // Clear any uploaded file if recording starts
+            audioFile = null;
+            audioUploadInput.value = "";
+
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        // Only process if we have chunks (wasn't just cancelled)
+                        if (audioChunks.length > 0) {
+                            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                audioBlobBase64 = reader.result;
+                                document.getElementById('audio-preview').src = audioBlobBase64;
+                                document.getElementById('audio-preview-container').classList.remove('hidden');
+                                document.getElementById('record-status').innerText = "Voz capturada con éxito";
+                            };
+                            reader.readAsDataURL(blob);
+                        }
                     };
-                    reader.readAsDataURL(blob);
-                };
-                mediaRecorder.start();
-                recordBtn.classList.add('recording-pulse');
-                document.getElementById('record-status').innerText = "Grabando... (Toca de nuevo para parar)";
+                    mediaRecorder.start();
+                    recordBtn.classList.add('recording-pulse');
+                    document.getElementById('record-status').innerText = "Grabando... (Toca de nuevo para parar)";
+                } catch (err) {
+                    console.error("Mic Error:", err);
+                    showToast("No se pudo acceder al micrófono", "error");
+                }
             } else {
                 mediaRecorder.stop();
                 recordBtn.classList.remove('recording-pulse');
