@@ -965,8 +965,10 @@
             }
             items.forEach(m => {
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-[2.5rem] p-10 shadow-lg hover:shadow-2xl transition-all';
-                card.innerHTML = `
+                card.className = 'bg-white rounded-[2.5rem] p-10 shadow-lg hover:shadow-2xl transition-all relative group';
+
+                // Content
+                let contentHtml = `
                     <div class="relative">
                         <div class="flex items-center gap-4 mb-6">
                             <div class="h-px flex-1 bg-slate-50"></div>
@@ -976,11 +978,52 @@
                         <h4 class="text-2xl font-black uppercase italic tracking-tighter text-slate-900 leading-tight mb-4">${m.title}</h4>
                         <p class="text-slate-500 text-[13px] leading-relaxed font-medium mb-6">${m.content}</p>
                         ${m.audio ? `<audio controls class="w-full mb-4"><source src="${m.audio}"></audio>` : ''}
-                        <button onclick="event.stopPropagation(); deleteItemImmediate('${m.id}')" class="absolute top-4 right-4 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow hover:bg-white transition">
-                            <i data-lucide="trash-2" size="14" class="text-rose-500"></i>
-                        </button>
+                        ${m.image ? `<img src="${m.image}" class="w-full rounded-2xl mb-4 object-cover max-h-96 cursor-pointer" onclick="openLightbox('${m.image}')">` : ''}
                     </div>
                 `;
+
+                card.innerHTML = contentHtml;
+
+                // --- Menu Container (Top Right) ---
+                const menuContainer = document.createElement('div');
+                menuContainer.className = 'absolute top-6 right-6 z-30';
+
+                // --- 3-Dot Button ---
+                const moreBtn = document.createElement('button');
+                moreBtn.className = 'w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center hover:bg-slate-100 transition text-slate-400 hover:text-slate-600';
+                moreBtn.innerHTML = '<i data-lucide="more-vertical" size="18" class="pointer-events-none"></i>';
+
+                // --- Dropdown Menu ---
+                const menuDropdown = document.createElement('div');
+                menuDropdown.className = 'gallery-menu hidden absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden py-2 animate-fade z-40';
+
+                // Toggle Menu
+                moreBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    ev.preventDefault();
+                    document.querySelectorAll('.gallery-menu').forEach(el => {
+                        if (el !== menuDropdown) el.classList.add('hidden');
+                    });
+                    menuDropdown.classList.toggle('hidden');
+                };
+
+                // Option: Delete
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'w-full text-left px-5 py-3 text-[10px] uppercase font-bold tracking-wider text-slate-500 hover:bg-slate-50 flex items-center gap-3 group/item transition-colors';
+                deleteBtn.innerHTML = '<i data-lucide="trash-2" size="14" class="group-hover/item:text-rose-500 pointer-events-none"></i> Eliminar';
+                deleteBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    if (confirm('¿Seguro que quieres borrar este recuerdo?')) {
+                        deleteItemConfirmed(m.id);
+                    }
+                    menuDropdown.classList.add('hidden');
+                };
+
+                menuDropdown.appendChild(deleteBtn);
+                menuContainer.appendChild(moreBtn);
+                menuContainer.appendChild(menuDropdown);
+
+                card.appendChild(menuContainer);
                 grid.appendChild(card);
             });
             lucide.createIcons();
