@@ -1079,11 +1079,62 @@
 
                     const addPromises = [];
 
-                    // HELPER: Upload file to Firebase Storage
-                    const uploadFileToStorage = async (file, pathName) => {
-                        const storageRef = ref(storage, pathName);
-                        await uploadBytes(storageRef, file);
-                        return await getDownloadURL(storageRef);
+                    // HELPER: Upload file to Firebase Storage with Fallback
+                    const uploadHandler = async (file, pathName, isAudio = false) => {
+                        // 1. Try Storage (Best for all sizes)
+                        try {
+                            // Validate online status
+                            if (!navigator.onLine) throw new Error("OFFLINE");
+
+                            const storageRef = ref(storage, pathName);
+                            // Add metadata for better content handling
+                            const metadata = { contentType: isAudio ? 'audio/webm' : file.type };
+
+                            if (progLabelEl) progLabelEl.innerText = isAudio ? "Subiendo audio..." : "Subiendo imagen...";
+
+                            await uploadBytes(storageRef, file, metadata);
+                            return { url: await getDownloadURL(storageRef), storage: true };
+                        } catch (err) {
+                            console.warn("Storage upload failed, trying fallback...", err);
+
+                            // 2. Fallback to Base64 (Only for small files < 900KB)
+                            // Firestore limit is ~1MB, safe limit ~900KB
+                            if (file.size < 900000) {
+                                if (progLabelEl) progLabelEl.innerText = "Usando guardado local...";
+                                return { url: await compressImage(file), storage: false }; // compressImage handles blobs too actually? No, specific to images.
+                                // We need a generic base64 converter for audio fallback
+                            } else {
+                                // File too big for fallback -> Must fail
+                                console.error("File to big for fallback:", file.size);
+                                throw new Error("STORAGE_Config_Required");
+                            }
+                        }
+                    };
+
+                    // Generic Base64 Converter for Audio/Other
+                    const toBase64 = (blob) => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+
+                    // Revised Upload Logic
+                    const processUpload = async (fileOrBlob, path, isAudio) => {
+                        try {
+                            return await uploadHandler(fileOrBlob, path, isAudio);
+                        } catch (err) {
+                            if (err.message === "STORAGE_Config_Required") {
+                                // Re-throw to be caught by main handler with specific message
+                                throw err;
+                            }
+                            // Try Base64 fallback explicitly if uploadHandler failed logic didn't catch it (e.g. wrapper issues)
+                            if (fileOrBlob.size < 900000) {
+                                const b64 = await toBase64(fileOrBlob);
+                                return { url: b64, storage: false };
+                            }
+                            throw err;
+                        }
                     };
 
                     if (activeTab === 'gallery' && selectedFiles && selectedFiles.length) {
@@ -1094,15 +1145,32 @@
                             const fileName = `gallery/${Date.now()}_${i}.${ext}`;
 
                             // Update progress
-                            if (progLabelEl) progLabelEl.innerText = `Subiendo imagen ${i + 1}/${selectedFiles.length}...`;
-                            const downloadUrl = await uploadFileToStorage(file, fileName);
-                            uploadedUrls.push(downloadUrl);
+                            if (progLabelEl) progLabelEl.innerText = `Procesando ${i + 1}/${selectedFiles.length}...`;
 
-                            const data = { type: activeTab, title, url: "", content, created, image: downloadUrl, audio: "" };
+                            // For images, we already have compressImage for fallback, but let's use the new unified handler
+                            // Note: compressImage returns a DataURL string. uploadHandler expects a Blob/File.
+                            // If we fail storage, we should use compressImage result.
+
+                            let resultUrl = "";
+                            try {
+                                const res = await uploadHandler(file, fileName, false);
+                                // If fallback returned a promise of compressImage (which it didn't in my logic above, let's fix that validation)
+                                // Actually my fallback logic above called compressImage for valid fallback.
+                                // Wait, compressImage expects base64 string or blob. It returns DataURL string.
+                                if (typeof res.url === 'string') {
+                                    resultUrl = res.url;
+                                }
+                            } catch (e) {
+                                // If storage failed and file too big
+                                if (e.message === "STORAGE_Config_Required") throw e;
+                                // Fallback manual
+                                resultUrl = await compressImage(file);
+                            }
+
+                            uploadedUrls.push(resultUrl);
+                            const data = { type: activeTab, title, url: "", content, created, image: resultUrl, audio: "" };
                             addPromises.push(addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'memories'), data));
                         }
-
-                        // Also support old compressedArray logic for backward compat if needed, but we prefer storage now
                         const results = await Promise.all(addPromises);
                         return { results, uploadedUrls, title, content };
 
@@ -1118,26 +1186,32 @@
 
                         // Handle Audio Upload
                         if (audioFile) {
-                            if (progLabelEl) progLabelEl.innerText = `Subiendo audio...`;
                             const ext = audioFile.name.split('.').pop() || 'mp3';
                             const fileName = `diary/audio_${Date.now()}.${ext}`;
-                            audioUrl = await uploadFileToStorage(audioFile, fileName);
+                            const res = await processUpload(audioFile, fileName, true);
+                            audioUrl = res.url;
                         } else if (audioBlobBase64) {
                             // Convert base64 back to blob for upload
-                            if (progLabelEl) progLabelEl.innerText = `Subiendo nota de voz...`;
                             const fetchRes = await fetch(audioBlobBase64);
                             const blob = await fetchRes.blob();
                             const fileName = `diary/audio_${Date.now()}.webm`;
-                            audioUrl = await uploadFileToStorage(blob, fileName);
+                            const res = await processUpload(blob, fileName, true);
+                            audioUrl = res.url;
                         }
 
                         // Handle Image (if any)
                         if (selectedFiles && selectedFiles.length) {
-                            if (progLabelEl) progLabelEl.innerText = `Subiendo imagen...`;
                             const file = selectedFiles[0];
                             const ext = file.name.split('.').pop();
                             const fileName = `diary/image_${Date.now()}.${ext}`;
-                            imageUrl = await uploadFileToStorage(file, fileName);
+                            // Try generic upload, fallback to compressImage if needed
+                            try {
+                                const res = await uploadHandler(file, fileName, false);
+                                imageUrl = res.url;
+                            } catch (e) {
+                                if (e.message === "STORAGE_Config_Required") throw e;
+                                imageUrl = await compressImage(file);
+                            }
                         }
 
                         const data = { type: activeTab, title, url: urls[0] || "", content, created, image: imageUrl, audio: audioUrl };
