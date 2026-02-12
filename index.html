@@ -1244,7 +1244,12 @@
             } catch (err) {
                 console.error('Save Error:', err);
                 if (err && err.message === 'timeout') {
-                    showToast('La subida está tardando demasiado. Verifica tu internet.', 'error');
+                    showToast('El internet está lento. Intenta de nuevo.', 'error');
+                } else if (err && err.message === 'STORAGE_Config_Required') {
+                    alert("⚠️ Error: El archivo es muy grande y Firebase Storage no está habilitado.\n\nPara subir archivos grandes (>1MB), ve a tu consola de Firebase > Build > Storage y haz clic en 'Comenzar' para habilitarlo.");
+                    showToast('Error: Habilita Firebase Storage', 'error');
+                } else if (err && (err.message === 'AUDIO_TOO_LARGE' || err.message === 'IMAGE_TOO_LARGE')) {
+                    showToast('El archivo es muy grande para la nube.', 'error');
                 } else {
                     showToast('Error al guardar: ' + err.message, 'error');
                 }
